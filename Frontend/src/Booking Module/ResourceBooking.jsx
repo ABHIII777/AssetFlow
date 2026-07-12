@@ -10,9 +10,12 @@ function ResourceBooking() {
     const [bookings, setBookings] = useState([]);
     const [editingId, setEditingId] = useState(null);
     const [form, setForm] = useState({ resource: "", date: "", startTime: "", endTime: "" });
+    const currentUser = localStorage.getItem("userName") || "Admin User";
 
     const fetchBookings = () => {
-        axios.get("http://localhost:5000/api/bookings")
+        const user = localStorage.getItem("userName");
+        const role = localStorage.getItem("userRole");
+        axios.get(`http://localhost:5000/api/bookings?user=${user}&role=${role}`)
             .then(res => setBookings(res.data))
             .catch(err => console.error(err));
     };
@@ -54,6 +57,11 @@ function ResourceBooking() {
             fetchBookings();
         } catch (err) {
             console.error(err);
+            if (err.response && err.response.data && err.response.data.error) {
+                alert(err.response.data.error);
+            } else {
+                alert("An error occurred while cancelling the booking.");
+            }
         }
     };
 
@@ -139,7 +147,7 @@ function ResourceBooking() {
                                         <td>{startTime} – {endTime}</td>
                                         <td><span className={`status-pill ${STATUS_CLASS[b.status] || "grey"}`}>{b.status}</span></td>
                                         <td>
-                                            {b.status === "Upcoming" && (
+                                            {b.status === "Upcoming" && b.user === currentUser && (
                                                 <div className="row-actions">
                                                     <button className="btn-text" onClick={() => handleReschedule(b)}>Reschedule</button>
                                                     <button className="btn-text" onClick={() => handleCancel(b.id)}>Cancel</button>

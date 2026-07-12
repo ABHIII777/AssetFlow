@@ -11,6 +11,8 @@ function Audit() {
     const [showForm, setShowForm] = useState(false);
     const [form, setForm] = useState({ name: "", startDate: "" });
 
+    const userRole = localStorage.getItem("userRole") || "Employee";
+
     const fetchCycles = () => {
         axios.get("http://localhost:5000/api/audits").then(res => setCycles(res.data)).catch(console.error);
         axios.get("http://localhost:5000/api/discrepancies").then(res => setDiscrepancies(res.data)).catch(console.error);
@@ -19,6 +21,20 @@ function Audit() {
     useEffect(() => {
         fetchCycles();
     }, []);
+
+    const handleUpdate = async (id, currentStatus) => {
+        const newStatus = prompt("Enter new status (Scheduled, In Progress, Completed):", currentStatus);
+        if (newStatus && ["Scheduled", "In Progress", "Completed"].includes(newStatus)) {
+            try {
+                await axios.put(`http://localhost:5000/api/audits/${id}`, { status: newStatus });
+                fetchCycles();
+            } catch (err) {
+                console.error(err);
+            }
+        } else if (newStatus) {
+            alert("Invalid status");
+        }
+    };
 
     const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
@@ -46,9 +62,11 @@ function Audit() {
                     <p className="module-subtitle">Run structured verification cycles and auto-generate discrepancy reports.</p>
                 </div>
                 <div className="module-actions">
-                    <button className="btn-primary" onClick={() => setShowForm(!showForm)}>
-                        {showForm ? "Cancel" : "+ Create Audit Cycle"}
-                    </button>
+                    {userRole === "Admin" && (
+                        <button className="btn-primary" onClick={() => setShowForm(!showForm)}>
+                            {showForm ? "Cancel" : "+ Create Audit Cycle"}
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -98,7 +116,9 @@ function Audit() {
                                         <td><span className={`status-pill ${STATUS_CLASS[c.status]}`}>{c.status}</span></td>
                                         <td>{c.progress}%</td>
                                         <td>
-                                            {c.status !== "Completed" && <button className="btn-text">Update</button>}
+                                            {c.status !== "Completed" && userRole === "Admin" && (
+                                                <button className="btn-text" onClick={() => handleUpdate(c.id, c.status)}>Update</button>
+                                            )}
                                         </td>
                                     </tr>
                                 ))}

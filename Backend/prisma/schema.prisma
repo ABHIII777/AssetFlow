@@ -100,10 +100,11 @@ model Discrepancy {
 }
 
 model Notification {
-  id      Int    @id @default(autoincrement())
-  message String
-  time    String
-  type    String
+  id         Int     @id @default(autoincrement())
+  message    String
+  time       String
+  type       String
+  targetUser String?
 }
 
 model Log {

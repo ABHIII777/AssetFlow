@@ -12,15 +12,20 @@ function AllocationTransfer() {
     const [transfers, setTransfers] = useState([]);
     const [form, setForm] = useState({ asset: "", assignedTo: "", notes: "" });
     const [errorMsg, setErrorMsg] = useState("");
+    const [transferForm, setTransferForm] = useState({ asset: null, to: "", toDept: "" });
+    const [transferError, setTransferError] = useState("");
+
+    const userRole = localStorage.getItem("userRole") || "Employee";
+    const userName = localStorage.getItem("userName") || "";
 
     const fetchAllocations = () => {
-        axios.get("http://localhost:5000/api/allocations")
+        axios.get(`http://localhost:5000/api/allocations?user=${encodeURIComponent(userName)}&role=${encodeURIComponent(userRole)}`)
             .then(res => setAllocations(res.data))
             .catch(err => console.error(err));
     };
 
     const fetchTransfers = () => {
-        axios.get("http://localhost:5000/api/transfers")
+        axios.get(`http://localhost:5000/api/transfers?user=${encodeURIComponent(userName)}&role=${encodeURIComponent(userRole)}`)
             .then(res => setTransfers(res.data))
             .catch(err => console.error(err));
     };
@@ -37,21 +42,37 @@ function AllocationTransfer() {
         } catch (e) { console.error(e); }
     };
 
-    const handleTransfer = async (alloc) => {
-        const to = prompt("Transfer to whom?");
-        if (!to) return;
+    const handleTransfer = (alloc) => {
+        setTransferForm({ asset: alloc, to: "", toDept: "" });
+        setTransferError("");
+    };
+
+    const submitTransfer = async () => {
+        setTransferError("");
+        if (!transferForm.to || !transferForm.toDept) {
+            setTransferError("Please provide both Username and Department.");
+            return;
+        }
         try {
             await axios.post("http://localhost:5000/api/transfers", {
-                asset: alloc.asset,
-                from: alloc.assignedTo,
-                to: to,
+                asset: transferForm.asset.asset,
+                from: transferForm.asset.assignedTo,
+                to: transferForm.to,
+                toDept: transferForm.toDept,
                 reason: "User requested transfer",
                 status: "Pending",
                 date: new Date().toISOString().split('T')[0]
             });
+            setTransferForm({ asset: null, to: "", toDept: "" });
             fetchTransfers();
             setTab("transfers");
-        } catch (e) { console.error(e); }
+        } catch (e) {
+            if (e.response && e.response.status === 400) {
+                setTransferError(e.response.data.error);
+            } else {
+                setTransferError("An error occurred requesting transfer.");
+            }
+        }
     };
 
     const handleResolveTransfer = async (id, status) => {
@@ -93,9 +114,11 @@ function AllocationTransfer() {
                     <p className="module-subtitle">See who holds what, and route transfer requests when there's a conflict.</p>
                 </div>
                 <div className="module-actions">
-                    <button className="btn-primary" onClick={() => { setShowForm(!showForm); setErrorMsg(""); }}>
-                        {showForm ? "Close" : "+ Allocate Asset"}
-                    </button>
+                    {userRole === "Admin" && (
+                        <button className="btn-primary" onClick={() => { setShowForm(!showForm); setErrorMsg(""); }}>
+                            {showForm ? "Close" : "+ Allocate Asset"}
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -122,6 +145,29 @@ function AllocationTransfer() {
                         <div className="form-panel-actions">
                             <button className="btn-secondary" onClick={() => setShowForm(false)}>Cancel</button>
                             <button className="btn-primary" onClick={handleSubmit}>Allocate</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {transferForm.asset && (
+                <div className="card-surface" style={{ marginBottom: 24 }}>
+                    <div className="form-panel">
+                        {transferError && <div className="login-error" style={{ gridColumn: "1 / -1", color: "red" }}>{transferError}</div>}
+                        <div className="form-field" style={{ gridColumn: "1 / -1" }}>
+                            <strong>Transferring:</strong> {transferForm.asset.asset}
+                        </div>
+                        <div className="form-field">
+                            <label>Transfer To (Username)</label>
+                            <input type="text" value={transferForm.to} onChange={(e) => setTransferForm({...transferForm, to: e.target.value})} placeholder="e.g. Amit Patel" />
+                        </div>
+                        <div className="form-field">
+                            <label>Department</label>
+                            <input type="text" value={transferForm.toDept} onChange={(e) => setTransferForm({...transferForm, toDept: e.target.value})} placeholder="e.g. Engineering" />
+                        </div>
+                        <div className="form-panel-actions">
+                            <button className="btn-secondary" onClick={() => setTransferForm({ asset: null, to: "", toDept: "" })}>Cancel</button>
+                            <button className="btn-primary" onClick={submitTransfer}>Request Transfer</button>
                         </div>
                     </div>
                 </div>
@@ -155,8 +201,12 @@ function AllocationTransfer() {
                                         <td className="row-actions">
                                             {a.status !== "Returned" && (
                                                 <>
-                                                    <button className="btn-text" onClick={() => handleTransfer(a)}>Transfer</button>
-                                                    <button className="btn-text" onClick={() => handleMarkReturned(a.id)}>Mark Returned</button>
+                                                    {a.assignedTo === userName && (
+                                                        <button className="btn-text" onClick={() => handleTransfer(a)}>Transfer</button>
+                                                    )}
+                                                    {userRole === "Admin" && (
+                                                        <button className="btn-text" onClick={() => handleMarkReturned(a.id)}>Mark Returned</button>
+                                                    )}
                                                 </>
                                             )}
                                         </td>
@@ -190,10 +240,14 @@ function AllocationTransfer() {
                                         <td><span className={`status-pill ${STATUS_CLASS[t.status]}`}>{t.status}</span></td>
                                         <td className="row-actions">
                                             {t.status === "Pending" ? (
-                                                <>
-                                                    <button className="btn-text" onClick={() => handleResolveTransfer(t.id, "Approved")}>Approve</button>
-                                                    <button className="btn-text" style={{color: "var(--red)"}} onClick={() => handleResolveTransfer(t.id, "Rejected")}>Reject</button>
-                                                </>
+                                                userRole === "Admin" ? (
+                                                    <>
+                                                        <button className="btn-text" onClick={() => handleResolveTransfer(t.id, "Approved")}>Approve</button>
+                                                        <button className="btn-text" style={{color: "var(--red)"}} onClick={() => handleResolveTransfer(t.id, "Rejected")}>Reject</button>
+                                                    </>
+                                                ) : (
+                                                    <span className="cell-muted">Pending Admin Action</span>
+                                                )
                                             ) : (
                                                 <span className="cell-muted">Resolved</span>
                                             )}

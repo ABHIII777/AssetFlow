@@ -12,7 +12,9 @@ function Notifications() {
     const [logs, setLogs] = useState([]);
 
     useEffect(() => {
-        axios.get("http://localhost:5000/api/notifications")
+        const user = localStorage.getItem("userName");
+        const role = localStorage.getItem("userRole");
+        axios.get(`http://localhost:5000/api/notifications?user=${user}&role=${role}`)
             .then(res => {
                 const mapped = res.data.map(n => ({
                     id: n.id,
@@ -53,7 +55,9 @@ function Notifications() {
                     <button className={`tab-btn ${tab === "notifications" ? "active" : ""}`} onClick={() => setTab("notifications")}>
                         Notifications {unreadCount > 0 && <span className="tab-count">{unreadCount}</span>}
                     </button>
-                    <button className={`tab-btn ${tab === "log" ? "active" : ""}`} onClick={() => setTab("log")}>Activity Log</button>
+                    {localStorage.getItem("userRole") === "Admin" && (
+                        <button className={`tab-btn ${tab === "log" ? "active" : ""}`} onClick={() => setTab("log")}>Activity Log</button>
+                    )}
                 </div>
 
                 {tab === "notifications" && (

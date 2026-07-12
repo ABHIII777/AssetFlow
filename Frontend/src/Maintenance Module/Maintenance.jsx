@@ -9,17 +9,39 @@ const PRIORITY_CLASS = { High: "red", Medium: "orange", Low: "grey" };
 function Maintenance() {
     const [showForm, setShowForm] = useState(false);
     const [requests, setRequests] = useState([]);
+    const [myAssets, setMyAssets] = useState([]);
     const [form, setForm] = useState({ asset: "", priority: "Medium", issue: "" });
 
+    const userRole = localStorage.getItem("userRole") || "Employee";
+    const userName = localStorage.getItem("userName") || "Admin User";
+
     const fetchRequests = () => {
-        axios.get("http://localhost:5000/api/maintenance")
+        axios.get(`http://localhost:5000/api/maintenance?user=${encodeURIComponent(userName)}&role=${encodeURIComponent(userRole)}`)
             .then(res => setRequests(res.data))
+            .catch(err => console.error(err));
+    };
+
+    const fetchMyAssets = () => {
+        axios.get(`http://localhost:5000/api/allocations?user=${encodeURIComponent(userName)}&role=${encodeURIComponent(userRole)}`)
+            .then(res => {
+                // filter active allocations if possible, or just map asset name
+                const assets = Array.from(new Set(res.data.map(a => a.asset)));
+                setMyAssets(assets);
+            })
             .catch(err => console.error(err));
     };
 
     useEffect(() => {
         fetchRequests();
+        fetchMyAssets();
     }, []);
+
+    const handleResolve = async (id) => {
+        try {
+            await axios.put(`http://localhost:5000/api/maintenance/${id}`, { status: "Resolved" });
+            fetchRequests();
+        } catch (e) { console.error(e); }
+    };
 
     const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
@@ -61,9 +83,9 @@ function Maintenance() {
                             <label>Asset</label>
                             <select name="asset" value={form.asset} onChange={handleChange}>
                                 <option value="" disabled>Select asset</option>
-                                <option>AF-0114 — MacBook Pro 14"</option>
-                                <option>AF-0198 — Dell Monitor 27"</option>
-                                <option>AF-0045 — Toyota Innova</option>
+                                {myAssets.map((asset, idx) => (
+                                    <option key={idx} value={asset}>{asset}</option>
+                                ))}
                             </select>
                         </div>
                         <div className="form-field">
@@ -108,6 +130,11 @@ function Maintenance() {
                                     </div>
                                     <p className="maint-issue">{r.issue}</p>
                                     <p className="maint-by">Raised by {r.raisedBy || r.loggedBy}</p>
+                                    {localStorage.getItem("userRole") === "Admin" && stage !== "Resolved" && (
+                                        <div style={{ marginTop: "12px", textAlign: "right" }}>
+                                            <button className="btn-secondary" style={{ padding: "4px 8px", fontSize: "12px" }} onClick={() => handleResolve(r.id)}>Mark Resolved</button>
+                                        </div>
+                                    )}
                                 </div>
                             ))}
                             {requests.filter((r) => (r.stage || r.status) === stage).length === 0 && (

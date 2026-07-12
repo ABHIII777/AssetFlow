@@ -48,6 +48,18 @@ function DepartmentsTab() {
         }
     };
 
+    const handleEdit = async (id, currentName) => {
+        const newName = prompt("Enter new department name:", currentName);
+        if (newName && newName !== currentName) {
+            try {
+                await axios.put(`http://localhost:5000/api/departments/${id}`, { name: newName });
+                fetchDepartments();
+            } catch (err) {
+                console.error(err);
+            }
+        }
+    };
+
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
             {showForm && (
@@ -88,7 +100,7 @@ function DepartmentsTab() {
                                 <td>{d.head || "—"}</td>
                                 <td>{d.parent || "—"}</td>
                                 <td><StatusPill value={d.status} /></td>
-                                <td><button className="btn-text">Edit</button></td>
+                                <td><button className="btn-text" onClick={() => handleEdit(d.id, d.name)}>Edit</button></td>
                             </tr>
                         ))}
                     </tbody>
@@ -101,11 +113,27 @@ function DepartmentsTab() {
 function CategoriesTab() {
     const [categories, setCategories] = useState([]);
 
-    useEffect(() => {
+    const fetchCategories = () => {
         axios.get("http://localhost:5000/api/categories")
             .then(res => setCategories(res.data))
             .catch(err => console.error(err));
+    };
+
+    useEffect(() => {
+        fetchCategories();
     }, []);
+
+    const handleEdit = async (id, currentName) => {
+        const newName = prompt("Enter new category name:", currentName);
+        if (newName && newName !== currentName) {
+            try {
+                await axios.put(`http://localhost:5000/api/categories/${id}`, { name: newName });
+                fetchCategories();
+            } catch (err) {
+                console.error(err);
+            }
+        }
+    };
 
     return (
         <div className="table-wrap">
@@ -124,7 +152,7 @@ function CategoriesTab() {
                             <td className="cell-strong">{c.name}</td>
                             <td className="cell-muted">{c.fields}</td>
                             <td>{c.assetCount}</td>
-                            <td><button className="btn-text">Edit</button></td>
+                            <td><button className="btn-text" onClick={() => handleEdit(c.id, c.name)}>Edit</button></td>
                         </tr>
                     ))}
                 </tbody>
@@ -136,11 +164,27 @@ function CategoriesTab() {
 function EmployeesTab() {
     const [employees, setEmployees] = useState([]);
 
-    useEffect(() => {
+    const fetchEmployees = () => {
         axios.get("http://localhost:5000/api/employees")
             .then(res => setEmployees(res.data))
             .catch(err => console.error(err));
+    };
+
+    useEffect(() => {
+        fetchEmployees();
     }, []);
+
+    const handlePromote = async (id, currentRole) => {
+        const newRole = prompt("Enter new role (e.g. Admin, Department Head, Employee):", currentRole);
+        if (newRole && newRole !== currentRole) {
+            try {
+                await axios.put(`http://localhost:5000/api/employees/${id}`, { role: newRole });
+                fetchEmployees();
+            } catch (err) {
+                console.error(err);
+            }
+        }
+    };
 
     return (
         <div className="table-wrap">
@@ -165,7 +209,11 @@ function EmployeesTab() {
                                 <span className={`status-pill ${e.role === "Employee" ? "grey" : "purple"}`}>{e.role}</span>
                             </td>
                             <td><StatusPill value={e.status} /></td>
-                            <td><button className="btn-text">Promote</button></td>
+                            <td>
+                                {e.role !== "Admin" && (
+                                    <button className="btn-text" onClick={() => handlePromote(e.id, e.role)}>Promote</button>
+                                )}
+                            </td>
                         </tr>
                     ))}
                 </tbody>
