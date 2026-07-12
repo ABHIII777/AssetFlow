@@ -3,17 +3,13 @@ import axios from "axios";
 import "../shared/moduleStyles.css";
 import "./AllocationTransfer.css";
 
-const MOCK_TRANSFERS = [
-    { id: 1, asset: 'AF-0114 — MacBook Pro 14"', from: "Priya Shah", to: "Raj Malhotra", requestedOn: "2026-07-08", status: "Pending" },
-    { id: 2, asset: "AF-0301 — Conference Table", from: "Facilities", to: "IT Floor 2", requestedOn: "2026-07-05", status: "Approved" },
-];
-
-const STATUS_CLASS = { Active: "green", Overdue: "red", Pending: "orange", Approved: "green", Rejected: "red" };
+const STATUS_CLASS = { Active: "green", Overdue: "red", Pending: "orange", Approved: "green", Rejected: "red", Returned: "grey" };
 
 function AllocationTransfer() {
     const [tab, setTab] = useState("current");
     const [showForm, setShowForm] = useState(false);
     const [allocations, setAllocations] = useState([]);
+    const [transfers, setTransfers] = useState([]);
     const [form, setForm] = useState({ asset: "", assignedTo: "", notes: "" });
     const [errorMsg, setErrorMsg] = useState("");
 
@@ -23,9 +19,47 @@ function AllocationTransfer() {
             .catch(err => console.error(err));
     };
 
+    const fetchTransfers = () => {
+        axios.get("http://localhost:5000/api/transfers")
+            .then(res => setTransfers(res.data))
+            .catch(err => console.error(err));
+    };
+
     useEffect(() => {
         fetchAllocations();
+        fetchTransfers();
     }, []);
+
+    const handleMarkReturned = async (id) => {
+        try {
+            await axios.put(`http://localhost:5000/api/allocations/${id}`, { status: "Returned" });
+            fetchAllocations();
+        } catch (e) { console.error(e); }
+    };
+
+    const handleTransfer = async (alloc) => {
+        const to = prompt("Transfer to whom?");
+        if (!to) return;
+        try {
+            await axios.post("http://localhost:5000/api/transfers", {
+                asset: alloc.asset,
+                from: alloc.assignedTo,
+                to: to,
+                reason: "User requested transfer",
+                status: "Pending",
+                date: new Date().toISOString().split('T')[0]
+            });
+            fetchTransfers();
+            setTab("transfers");
+        } catch (e) { console.error(e); }
+    };
+
+    const handleResolveTransfer = async (id, status) => {
+        try {
+            await axios.put(`http://localhost:5000/api/transfers/${id}`, { status });
+            fetchTransfers();
+        } catch (e) { console.error(e); }
+    };
 
     const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
@@ -119,8 +153,12 @@ function AllocationTransfer() {
                                         <td className="cell-muted">{a.date}</td>
                                         <td><span className={`status-pill ${STATUS_CLASS[a.status]}`}>{a.status}</span></td>
                                         <td className="row-actions">
-                                            <button className="btn-text">Transfer</button>
-                                            <button className="btn-text">Mark Returned</button>
+                                            {a.status !== "Returned" && (
+                                                <>
+                                                    <button className="btn-text" onClick={() => handleTransfer(a)}>Transfer</button>
+                                                    <button className="btn-text" onClick={() => handleMarkReturned(a.id)}>Mark Returned</button>
+                                                </>
+                                            )}
                                         </td>
                                     </tr>
                                 ))}
@@ -143,21 +181,21 @@ function AllocationTransfer() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {MOCK_TRANSFERS.map((t) => (
+                                {transfers.map((t) => (
                                     <tr key={t.id}>
                                         <td className="cell-strong">{t.asset}</td>
                                         <td>{t.from}</td>
                                         <td>{t.to}</td>
-                                        <td className="cell-muted">{t.requestedOn}</td>
+                                        <td className="cell-muted">{t.date}</td>
                                         <td><span className={`status-pill ${STATUS_CLASS[t.status]}`}>{t.status}</span></td>
                                         <td className="row-actions">
                                             {t.status === "Pending" ? (
                                                 <>
-                                                    <button className="btn-text">Approve</button>
-                                                    <button className="btn-text">Reject</button>
+                                                    <button className="btn-text" onClick={() => handleResolveTransfer(t.id, "Approved")}>Approve</button>
+                                                    <button className="btn-text" style={{color: "var(--red)"}} onClick={() => handleResolveTransfer(t.id, "Rejected")}>Reject</button>
                                                 </>
                                             ) : (
-                                                <span className="cell-muted">Re-allocated</span>
+                                                <span className="cell-muted">Resolved</span>
                                             )}
                                         </td>
                                     </tr>

@@ -56,8 +56,10 @@ The backend will run on `http://localhost:5000`.
 
 ## API Architecture
 - `/api/auth/*` - Handles login/signup.
+- `/api/departments`, `/api/categories`, `/api/employees` - Organization Setup routes.
 - `/api/assets` - Asset registry CRUD.
 - `/api/allocations` & `/api/transfers` - Allocation conflicts and transfer routes.
 - `/api/bookings` - Shared resource reservation system.
 - `/api/maintenance` - Asset repair tickets.
+- `/api/audits` & `/api/discrepancies` - Audit cycles and discrepancy reports.
 - `/api/logs` & `/api/notifications` - Timely activity logs for the Home Dashboard.

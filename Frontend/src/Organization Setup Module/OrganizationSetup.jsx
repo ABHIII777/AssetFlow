@@ -14,39 +14,86 @@ function StatusPill({ value }) {
     return <span className={`status-pill ${cls}`}>{value}</span>;
 }
 
+// Event bus for add button
+const ADD_EVENT = new EventTarget();
+
 function DepartmentsTab() {
     const [departments, setDepartments] = useState([]);
+    const [showForm, setShowForm] = useState(false);
+    const [form, setForm] = useState({ name: "", head: "", parent: "", status: "Active" });
 
-    useEffect(() => {
+    const fetchDepartments = () => {
         axios.get("http://localhost:5000/api/departments")
             .then(res => setDepartments(res.data))
             .catch(err => console.error(err));
+    };
+
+    useEffect(() => {
+        fetchDepartments();
+        const onAdd = () => setShowForm(prev => !prev);
+        ADD_EVENT.addEventListener("add_departments", onAdd);
+        return () => ADD_EVENT.removeEventListener("add_departments", onAdd);
     }, []);
 
+    const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+
+    const handleSubmit = async () => {
+        try {
+            await axios.post("http://localhost:5000/api/departments", form);
+            setShowForm(false);
+            setForm({ name: "", head: "", parent: "", status: "Active" });
+            fetchDepartments();
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
     return (
-        <div className="table-wrap">
-            <table className="data-table">
-                <thead>
-                    <tr>
-                        <th>Department</th>
-                        <th>Head</th>
-                        <th>Parent Department</th>
-                        <th>Status</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {departments.map((d) => (
-                        <tr key={d.id}>
-                            <td className="cell-strong">{d.name}</td>
-                            <td>{d.head || "—"}</td>
-                            <td>{d.parent || "—"}</td>
-                            <td><StatusPill value={d.status} /></td>
-                            <td><button className="btn-text">Edit</button></td>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            {showForm && (
+                <div className="form-panel" style={{ background: 'var(--surface)', padding: '24px', borderRadius: '12px' }}>
+                    <div className="form-field">
+                        <label>Department Name</label>
+                        <input type="text" name="name" value={form.name} onChange={handleChange} placeholder="e.g. HR" />
+                    </div>
+                    <div className="form-field">
+                        <label>Head</label>
+                        <input type="text" name="head" value={form.head} onChange={handleChange} placeholder="e.g. Priya Shah" />
+                    </div>
+                    <div className="form-field">
+                        <label>Parent Department</label>
+                        <input type="text" name="parent" value={form.parent} onChange={handleChange} placeholder="e.g. Finance or —" />
+                    </div>
+                    <div className="form-panel-actions">
+                        <button className="btn-secondary" onClick={() => setShowForm(false)}>Cancel</button>
+                        <button className="btn-primary" onClick={handleSubmit}>Save Department</button>
+                    </div>
+                </div>
+            )}
+            <div className="table-wrap">
+                <table className="data-table">
+                    <thead>
+                        <tr>
+                            <th>Department</th>
+                            <th>Head</th>
+                            <th>Parent Department</th>
+                            <th>Status</th>
+                            <th></th>
                         </tr>
-                    ))}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        {departments.map((d) => (
+                            <tr key={d.id}>
+                                <td className="cell-strong">{d.name}</td>
+                                <td>{d.head || "—"}</td>
+                                <td>{d.parent || "—"}</td>
+                                <td><StatusPill value={d.status} /></td>
+                                <td><button className="btn-text">Edit</button></td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
         </div>
     );
 }
@@ -144,7 +191,7 @@ function OrganizationSetup() {
                     <p className="module-subtitle">Master data for departments, asset categories and the employee directory — Admin only.</p>
                 </div>
                 <div className="module-actions">
-                    <button className="btn-primary">{ADD_LABEL[tab]}</button>
+                    <button className="btn-primary" onClick={() => ADD_EVENT.dispatchEvent(new Event(`add_${tab}`))}>{ADD_LABEL[tab]}</button>
                 </div>
             </div>
 

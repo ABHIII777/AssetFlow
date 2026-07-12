@@ -161,6 +161,39 @@ app.get('/api/transfers', async (req, res) => {
   }
 });
 
+app.post('/api/transfers', async (req, res) => {
+  try {
+    const transfer = await prisma.transfer.create({ data: req.body });
+    res.json(transfer);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/api/transfers/:id', async (req, res) => {
+  try {
+    const transfer = await prisma.transfer.update({
+      where: { id: parseInt(req.params.id) },
+      data: req.body
+    });
+    res.json(transfer);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/api/allocations/:id', async (req, res) => {
+  try {
+    const allocation = await prisma.allocation.update({
+      where: { id: parseInt(req.params.id) },
+      data: req.body
+    });
+    res.json(allocation);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // ==========================================
 // BOOKINGS
 // ==========================================
@@ -236,6 +269,15 @@ app.get('/api/audits', async (req, res) => {
   try {
     const cycles = await prisma.auditCycle.findMany();
     res.json(cycles);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/audits', async (req, res) => {
+  try {
+    const cycle = await prisma.auditCycle.create({ data: req.body });
+    res.json(cycle);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
