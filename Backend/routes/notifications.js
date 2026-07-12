@@ -6,7 +6,15 @@ const router = Router();
 
 router.get('/notifications', async (req, res) => {
   try {
-    const notifications = await prisma.notification.findMany();
+    const { user, role } = req.query;
+    const where = {};
+    if (role !== 'Admin' && user) {
+      where.targetUser = user;
+    }
+    const notifications = await prisma.notification.findMany({
+      where,
+      orderBy: { id: 'desc' }
+    });
     res.json(notifications);
   } catch (error) {
     res.status(500).json({ error: error.message });

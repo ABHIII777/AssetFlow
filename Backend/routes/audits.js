@@ -22,6 +22,18 @@ router.post('/audits', async (req, res) => {
   }
 });
 
+router.put('/audits/:id', async (req, res) => {
+  try {
+    const cycle = await prisma.auditCycle.update({
+      where: { id: parseInt(req.params.id) },
+      data: req.body
+    });
+    res.json(cycle);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 router.get('/discrepancies', async (req, res) => {
   try {
     const discrepancies = await prisma.discrepancy.findMany();

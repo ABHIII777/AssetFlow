@@ -28,6 +28,13 @@ function ResourceBooking() {
     const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
     const handleSave = async () => {
+        if (!form.resource || !form.date || !form.startTime || !form.endTime) {
+            return alert("Please fill in all fields.");
+        }
+        if (form.startTime >= form.endTime) {
+            return alert("End time must be after start time.");
+        }
+
         const payload = {
             resource: form.resource,
             user: localStorage.getItem("userName") || "Admin User",
@@ -40,7 +47,7 @@ function ResourceBooking() {
             if (editingId) {
                 await axios.put(`${API}/bookings/${editingId}`, payload);
             } else {
-                await axios.post("${API}/bookings", payload);
+                await axios.post(`${API}/bookings`, payload);
             }
             setShowForm(false);
             setEditingId(null);
@@ -48,7 +55,8 @@ function ResourceBooking() {
             fetchBookings();
         } catch (err) {
             console.error(err);
-            alert("Error saving booking");
+            const msg = err.response?.data?.error || "Error saving booking";
+            alert(msg);
         }
     };
 
