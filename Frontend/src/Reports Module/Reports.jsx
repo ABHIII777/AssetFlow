@@ -52,10 +52,6 @@ function Reports() {
                     <h2 className="module-title">Reports &amp; Analytics</h2>
                     <p className="module-subtitle">Operational insight across utilization, maintenance, allocation and bookings.</p>
                 </div>
-                <div className="module-actions">
-                    <button className="btn-secondary">Export CSV</button>
-                    <button className="btn-primary">Export PDF</button>
-                </div>
             </div>
 
             <div className="reports-grid">
