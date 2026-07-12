@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import "./Login.css";
 
 // TODO: wire up to real auth API (POST /auth/login, POST /auth/signup, /auth/forgot-password)
@@ -11,7 +12,7 @@ function Login() {
 
     const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         setError("");
 
@@ -20,13 +21,22 @@ function Login() {
             return;
         }
 
-        // Mock auth — replace with a real API call.
-        // Signup always creates a plain Employee account; no role selection at signup.
-        localStorage.setItem("token", "mock-token");
-        localStorage.setItem("userRole", "Admin");
-        localStorage.setItem("userName", form.name || "Admin User");
-        localStorage.setItem("orgName", "AssetFlow");
-        navigate("/home", { replace: true });
+        try {
+            const url = mode === "login" 
+                ? "http://localhost:5000/api/auth/login" 
+                : "http://localhost:5000/api/auth/signup";
+                
+            const response = await axios.post(url, form);
+            
+            const { token, user } = response.data;
+            localStorage.setItem("token", token);
+            localStorage.setItem("userRole", user.role);
+            localStorage.setItem("userName", user.name);
+            localStorage.setItem("orgName", "AssetFlow");
+            navigate("/home", { replace: true });
+        } catch (err) {
+            setError(err.response?.data?.error || "An error occurred");
+        }
     };
 
     return (
@@ -52,7 +62,7 @@ function Login() {
                     </button>
                 </div>
 
-                <form className="login-form" onSubmit={handleSubmit}>
+                <form className="login-form" onSubmit={handleSubmit} autoComplete="off">
                     {mode === "signup" && (
                         <div className="login-field">
                             <label>Full Name</label>
@@ -62,12 +72,12 @@ function Login() {
 
                     <div className="login-field">
                         <label>Email</label>
-                        <input name="email" type="email" placeholder="you@company.com" value={form.email} onChange={handleChange} />
+                        <input name="email" type="email" placeholder="you@company.com" value={form.email} onChange={handleChange} autoComplete="off" />
                     </div>
 
                     <div className="login-field">
                         <label>Password</label>
-                        <input name="password" type="password" placeholder="••••••••" value={form.password} onChange={handleChange} />
+                        <input name="password" type="password" placeholder="••••••••" value={form.password} onChange={handleChange} autoComplete="new-password" />
                     </div>
 
                     {error && <p className="login-error">{error}</p>}

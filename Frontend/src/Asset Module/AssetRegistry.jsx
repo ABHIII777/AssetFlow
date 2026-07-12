@@ -1,16 +1,6 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import axios from "axios";
 import "../shared/moduleStyles.css";
-
-// TODO: replace with API.get("/assets") — filters (tag, serial, QR, category, status, dept, location)
-const MOCK_ASSETS = [
-    { id: 1, tag: "AF-0114", name: 'MacBook Pro 14"', category: "Electronics", status: "Allocated", location: "IT Floor 2", dept: "Information Technology", condition: "Good", shared: false },
-    { id: 2, tag: "AF-0062", name: "Epson Projector", category: "Electronics", status: "Available", location: "Conference Room A", dept: "Facilities", condition: "Good", shared: true },
-    { id: 3, tag: "AF-0231", name: "Ergonomic Chair", category: "Furniture", status: "Allocated", location: "Facilities Store", dept: "Facilities", condition: "Fair", shared: false },
-    { id: 4, tag: "AF-0045", name: "Toyota Innova", category: "Vehicles", status: "Reserved", location: "Parking B", dept: "Field Support", condition: "Good", shared: true },
-    { id: 5, tag: "AF-0198", name: 'Dell Monitor 27"', category: "Electronics", status: "Under Maintenance", location: "IT Store", dept: "Information Technology", condition: "Needs Repair", shared: false },
-    { id: 6, tag: "AF-0301", name: "Conference Table", category: "Furniture", status: "Available", location: "Meeting Room B2", dept: "Facilities", condition: "Good", shared: true },
-    { id: 7, tag: "AF-0087", name: "HP LaserJet Printer", category: "Office Equipment", status: "Lost", location: "—", dept: "Finance", condition: "—", shared: false },
-];
 
 const STATUS_CLASS = {
     Available: "green",
@@ -28,10 +18,59 @@ function AssetRegistry() {
     const [categoryFilter, setCategoryFilter] = useState("All");
     const [showForm, setShowForm] = useState(false);
 
-    const categories = useMemo(() => ["All", ...new Set(MOCK_ASSETS.map((a) => a.category))], []);
+    const [assets, setAssets] = useState([]);
+    const [dbCategories, setDbCategories] = useState([]);
+    const [dbDepartments, setDbDepartments] = useState([]);
+
+    const fetchAssets = () => {
+        axios.get("http://localhost:5000/api/assets")
+            .then(res => setAssets(res.data))
+            .catch(err => console.error(err));
+    };
+
+    useEffect(() => {
+        fetchAssets();
+        axios.get("http://localhost:5000/api/categories")
+            .then(res => setDbCategories(res.data))
+            .catch(err => console.error(err));
+        axios.get("http://localhost:5000/api/departments")
+            .then(res => setDbDepartments(res.data))
+            .catch(err => console.error(err));
+    }, []);
+
+    const [form, setForm] = useState({
+        name: "",
+        category: "",
+        tag: "",
+        condition: "Good",
+        location: "",
+        dept: "",
+        shared: "No"
+    });
+
+    const handleFormChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+
+    const handleSaveAsset = async () => {
+        if (!form.name || !form.category || !form.tag) return alert("Please fill Name, Category, and Tag.");
+        try {
+            await axios.post("http://localhost:5000/api/assets", {
+                ...form,
+                shared: form.shared === "Yes",
+                status: "Available"
+            });
+            setShowForm(false);
+            setForm({ name: "", category: "", tag: "", condition: "Good", location: "", dept: "", shared: "No" });
+            fetchAssets();
+        } catch (err) {
+            console.error(err);
+            alert("Error saving asset: " + (err.response?.data?.error || err.message));
+        }
+    };
+
+    const categories = useMemo(() => ["All", ...new Set(assets.map((a) => a.category))], [assets]);
     const statuses = ["All", "Available", "Allocated", "Reserved", "Under Maintenance", "Lost", "Retired", "Disposed"];
 
-    const filtered = MOCK_ASSETS.filter((a) => {
+    const filtered = assets.filter((a) => {
         const matchesQuery =
             a.tag.toLowerCase().includes(query.toLowerCase()) ||
             a.name.toLowerCase().includes(query.toLowerCase());
@@ -59,34 +98,29 @@ function AssetRegistry() {
                     <div className="form-panel">
                         <div className="form-field">
                             <label>Asset Name</label>
-                            <input type="text" placeholder='e.g. MacBook Pro 14"' />
+                            <input type="text" name="name" value={form.name} onChange={handleFormChange} placeholder='e.g. MacBook Pro 14"' />
                         </div>
                         <div className="form-field">
                             <label>Category</label>
-                            <select defaultValue="">
+                            <select name="category" value={form.category} onChange={handleFormChange}>
                                 <option value="" disabled>Select category</option>
-                                {categories.filter((c) => c !== "All").map((c) => <option key={c}>{c}</option>)}
+                                {dbCategories.map((c) => <option key={c.id} value={c.name}>{c.name}</option>)}
                             </select>
                         </div>
                         <div className="form-field">
                             <label>Asset Tag</label>
-                            <input type="text" value="AF-0302 (auto)" disabled />
+                            <input type="text" name="tag" value={form.tag} onChange={handleFormChange} placeholder="e.g. AF-0302" />
                         </div>
                         <div className="form-field">
-                            <label>Serial Number</label>
-                            <input type="text" placeholder="e.g. SN-88213X" />
-                        </div>
-                        <div className="form-field">
-                            <label>Acquisition Date</label>
-                            <input type="date" />
-                        </div>
-                        <div className="form-field">
-                            <label>Acquisition Cost</label>
-                            <input type="number" placeholder="For reporting only" />
+                            <label>Department</label>
+                            <select name="dept" value={form.dept} onChange={handleFormChange}>
+                                <option value="" disabled>Select department</option>
+                                {dbDepartments.map((d) => <option key={d.id} value={d.name}>{d.name}</option>)}
+                            </select>
                         </div>
                         <div className="form-field">
                             <label>Condition</label>
-                            <select defaultValue="Good">
+                            <select name="condition" value={form.condition} onChange={handleFormChange}>
                                 <option>Good</option>
                                 <option>Fair</option>
                                 <option>Needs Repair</option>
@@ -94,18 +128,18 @@ function AssetRegistry() {
                         </div>
                         <div className="form-field">
                             <label>Location</label>
-                            <input type="text" placeholder="e.g. IT Floor 2" />
+                            <input type="text" name="location" value={form.location} onChange={handleFormChange} placeholder="e.g. IT Floor 2" />
                         </div>
                         <div className="form-field">
                             <label>Bookable / Shared</label>
-                            <select defaultValue="No">
+                            <select name="shared" value={form.shared} onChange={handleFormChange}>
                                 <option>No</option>
                                 <option>Yes</option>
                             </select>
                         </div>
                         <div className="form-panel-actions">
                             <button className="btn-secondary" onClick={() => setShowForm(false)}>Cancel</button>
-                            <button className="btn-primary">Save Asset</button>
+                            <button className="btn-primary" onClick={handleSaveAsset}>Save Asset</button>
                         </div>
                     </div>
                 )}

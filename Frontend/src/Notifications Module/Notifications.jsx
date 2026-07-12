@@ -1,30 +1,35 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import axios from "axios";
 import "../shared/moduleStyles.css";
 import "./Notifications.css";
-
-// TODO: replace with API.get("/notifications") and /activity-log
-const MOCK_NOTIFICATIONS = [
-    { id: 1, type: "Overdue Return Alert", text: "Laptop AF-0114 was due back on 2026-07-02 — still with Priya Shah.", time: "10 min ago", read: false, tone: "red" },
-    { id: 2, type: "Booking Confirmed", text: "Room B2 booking confirmed for 10:00–11:00 today.", time: "35 min ago", read: false, tone: "green" },
-    { id: 3, type: "Maintenance Approved", text: "Repair approved for Toyota Innova (AF-0045) — AC not cooling.", time: "1 hr ago", read: true, tone: "purple" },
-    { id: 4, type: "Transfer Approved", text: "Conference Table AF-0301 transferred from Facilities to IT Floor 2.", time: "2 hrs ago", read: true, tone: "green" },
-    { id: 5, type: "Audit Discrepancy Flagged", text: "Wireless Mouse AF-0209 marked Missing in Q3 IT Assets cycle.", time: "Yesterday", read: true, tone: "orange" },
-    { id: 6, type: "Booking Reminder", text: "Your Conference Room A booking starts in 15 minutes.", time: "Yesterday", read: true, tone: "purple" },
-];
-
-const MOCK_LOG = [
-    { id: 1, actor: "Raj Malhotra", action: "Approved transfer request for AF-0301", time: "2026-07-12 09:14" },
-    { id: 2, actor: "Priya Shah", action: "Raised maintenance request for AF-0198", time: "2026-07-11 17:02" },
-    { id: 3, actor: "Admin", action: "Promoted Sana Iyer to Asset Manager", time: "2026-07-10 11:20" },
-    { id: 4, actor: "Amit Verma", action: "Booked Toyota Innova for 2026-07-13", time: "2026-07-09 15:47" },
-];
 
 const TONE_CLASS = { red: "red", green: "green", purple: "purple", orange: "orange" };
 
 function Notifications() {
     const [tab, setTab] = useState("notifications");
     const [filter, setFilter] = useState("all");
-    const [items, setItems] = useState(MOCK_NOTIFICATIONS);
+    const [items, setItems] = useState([]);
+    const [logs, setLogs] = useState([]);
+
+    useEffect(() => {
+        axios.get("http://localhost:5000/api/notifications")
+            .then(res => {
+                const mapped = res.data.map(n => ({
+                    id: n.id,
+                    type: n.type === "alert" ? "Alert" : "System Update",
+                    text: n.message,
+                    time: n.time,
+                    read: false,
+                    tone: n.type === "alert" ? "red" : "purple"
+                }));
+                setItems(mapped);
+            })
+            .catch(err => console.error(err));
+
+        axios.get("http://localhost:5000/api/logs")
+            .then(res => setLogs(res.data))
+            .catch(err => console.error(err));
+    }, []);
 
     const visible = filter === "unread" ? items.filter((n) => !n.read) : items;
     const unreadCount = items.filter((n) => !n.read).length;
@@ -86,13 +91,20 @@ function Notifications() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {MOCK_LOG.map((l) => (
-                                    <tr key={l.id}>
-                                        <td className="cell-strong">{l.actor}</td>
-                                        <td>{l.action}</td>
-                                        <td className="cell-muted">{l.time}</td>
-                                    </tr>
-                                ))}
+                                {logs.map((l) => {
+                                    // Parse actor if string starts with a known format or just use "System"
+                                    const parts = l.action.split(" ");
+                                    const actor = ["Priya", "Amit", "Admin", "System", "Raj"].includes(parts[0]) 
+                                                  ? parts[0] + (parts[0] !== "Admin" && parts[0] !== "System" ? " " + parts[1] : "") 
+                                                  : "System";
+                                    return (
+                                        <tr key={l.id}>
+                                            <td className="cell-strong">{actor}</td>
+                                            <td>{l.action}</td>
+                                            <td className="cell-muted">{l.time}</td>
+                                        </tr>
+                                    );
+                                })}
                             </tbody>
                         </table>
                     </div>

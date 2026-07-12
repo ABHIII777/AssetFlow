@@ -1,29 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import axios from "axios";
 import "../shared/moduleStyles.css";
 import "./OrganizationSetup.css";
-
-// TODO: replace with API.get("/departments"), ("/categories"), ("/employees")
-const MOCK_DEPARTMENTS = [
-    { id: 1, name: "Information Technology", head: "Priya Shah", parent: "—", status: "Active" },
-    { id: 2, name: "Facilities", head: "Rahul Nair", parent: "—", status: "Active" },
-    { id: 3, name: "Field Support", head: "Amit Verma", parent: "Information Technology", status: "Active" },
-    { id: 4, name: "Finance", head: "Unassigned", parent: "—", status: "Inactive" },
-];
-
-const MOCK_CATEGORIES = [
-    { id: 1, name: "Electronics", fields: "Warranty Period, Serial No.", assetCount: 84 },
-    { id: 2, name: "Furniture", fields: "Material, Dimensions", assetCount: 52 },
-    { id: 3, name: "Vehicles", fields: "Registration No., Fuel Type", assetCount: 12 },
-    { id: 4, name: "Office Equipment", fields: "Warranty Period", assetCount: 30 },
-];
-
-const MOCK_EMPLOYEES = [
-    { id: 1, name: "Priya Shah", email: "priya.shah@org.com", dept: "Information Technology", role: "Department Head", status: "Active" },
-    { id: 2, name: "Raj Malhotra", email: "raj.malhotra@org.com", dept: "Facilities", role: "Asset Manager", status: "Active" },
-    { id: 3, name: "Amit Verma", email: "amit.verma@org.com", dept: "Field Support", role: "Employee", status: "Active" },
-    { id: 4, name: "Neha Kapoor", email: "neha.kapoor@org.com", dept: "Finance", role: "Employee", status: "Inactive" },
-    { id: 5, name: "Sana Iyer", email: "sana.iyer@org.com", dept: "Information Technology", role: "Employee", status: "Active" },
-];
 
 const TABS = [
     { key: "departments", label: "Departments" },
@@ -37,6 +15,14 @@ function StatusPill({ value }) {
 }
 
 function DepartmentsTab() {
+    const [departments, setDepartments] = useState([]);
+
+    useEffect(() => {
+        axios.get("http://localhost:5000/api/departments")
+            .then(res => setDepartments(res.data))
+            .catch(err => console.error(err));
+    }, []);
+
     return (
         <div className="table-wrap">
             <table className="data-table">
@@ -50,11 +36,11 @@ function DepartmentsTab() {
                     </tr>
                 </thead>
                 <tbody>
-                    {MOCK_DEPARTMENTS.map((d) => (
+                    {departments.map((d) => (
                         <tr key={d.id}>
                             <td className="cell-strong">{d.name}</td>
-                            <td>{d.head}</td>
-                            <td>{d.parent}</td>
+                            <td>{d.head || "—"}</td>
+                            <td>{d.parent || "—"}</td>
                             <td><StatusPill value={d.status} /></td>
                             <td><button className="btn-text">Edit</button></td>
                         </tr>
@@ -66,6 +52,14 @@ function DepartmentsTab() {
 }
 
 function CategoriesTab() {
+    const [categories, setCategories] = useState([]);
+
+    useEffect(() => {
+        axios.get("http://localhost:5000/api/categories")
+            .then(res => setCategories(res.data))
+            .catch(err => console.error(err));
+    }, []);
+
     return (
         <div className="table-wrap">
             <table className="data-table">
@@ -78,7 +72,7 @@ function CategoriesTab() {
                     </tr>
                 </thead>
                 <tbody>
-                    {MOCK_CATEGORIES.map((c) => (
+                    {categories.map((c) => (
                         <tr key={c.id}>
                             <td className="cell-strong">{c.name}</td>
                             <td className="cell-muted">{c.fields}</td>
@@ -93,6 +87,14 @@ function CategoriesTab() {
 }
 
 function EmployeesTab() {
+    const [employees, setEmployees] = useState([]);
+
+    useEffect(() => {
+        axios.get("http://localhost:5000/api/employees")
+            .then(res => setEmployees(res.data))
+            .catch(err => console.error(err));
+    }, []);
+
     return (
         <div className="table-wrap">
             <table className="data-table">
@@ -107,11 +109,11 @@ function EmployeesTab() {
                     </tr>
                 </thead>
                 <tbody>
-                    {MOCK_EMPLOYEES.map((e) => (
+                    {employees.map((e) => (
                         <tr key={e.id}>
                             <td className="cell-strong">{e.name}</td>
                             <td className="cell-muted">{e.email}</td>
-                            <td>{e.dept}</td>
+                            <td>{e.dept || "—"}</td>
                             <td>
                                 <span className={`status-pill ${e.role === "Employee" ? "grey" : "purple"}`}>{e.role}</span>
                             </td>

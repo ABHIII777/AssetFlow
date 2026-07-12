@@ -1,15 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import axios from "axios";
 import "../shared/moduleStyles.css";
 import "./AllocationTransfer.css";
-
-// TODO: replace with API.get("/allocations")
-const MOCK_ALLOCATIONS = [
-    { id: 1, asset: 'AF-0114 — MacBook Pro 14"', holder: "Priya Shah", dept: "Information Technology", allocatedOn: "2026-05-02", expectedReturn: "2026-07-02", status: "Overdue" },
-    { id: 2, asset: "AF-0231 — Ergonomic Chair", holder: "Amit Verma", dept: "Field Support", allocatedOn: "2026-06-10", expectedReturn: "—", status: "Active" },
-    { id: 3, asset: "AF-0045 — Toyota Innova", holder: "Field Support (dept)", dept: "Field Support", allocatedOn: "2026-06-28", expectedReturn: "2026-07-20", status: "Active" },
-    { id: 4, asset: "AF-0173 — iPad Air", holder: "Sana Iyer", dept: "Information Technology", allocatedOn: "2026-04-14", expectedReturn: "2026-06-14", status: "Overdue" },
-    { id: 5, asset: "AF-0056 — Standing Desk", holder: "Neha Kapoor", dept: "Finance", allocatedOn: "2026-06-01", expectedReturn: "2026-08-01", status: "Active" },
-];
 
 const MOCK_TRANSFERS = [
     { id: 1, asset: 'AF-0114 — MacBook Pro 14"', from: "Priya Shah", to: "Raj Malhotra", requestedOn: "2026-07-08", status: "Pending" },
@@ -20,6 +12,44 @@ const STATUS_CLASS = { Active: "green", Overdue: "red", Pending: "orange", Appro
 
 function AllocationTransfer() {
     const [tab, setTab] = useState("current");
+    const [showForm, setShowForm] = useState(false);
+    const [allocations, setAllocations] = useState([]);
+    const [form, setForm] = useState({ asset: "", assignedTo: "", notes: "" });
+    const [errorMsg, setErrorMsg] = useState("");
+
+    const fetchAllocations = () => {
+        axios.get("http://localhost:5000/api/allocations")
+            .then(res => setAllocations(res.data))
+            .catch(err => console.error(err));
+    };
+
+    useEffect(() => {
+        fetchAllocations();
+    }, []);
+
+    const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+
+    const handleSubmit = async () => {
+        setErrorMsg("");
+        try {
+            await axios.post("http://localhost:5000/api/allocations", {
+                asset: form.asset,
+                assignedTo: form.assignedTo,
+                notes: form.notes,
+                date: new Date().toISOString().split("T")[0],
+                status: "Active"
+            });
+            setShowForm(false);
+            setForm({ asset: "", assignedTo: "", notes: "" });
+            fetchAllocations();
+        } catch (err) {
+            if (err.response && err.response.status === 409) {
+                setErrorMsg(err.response.data.error);
+            } else {
+                setErrorMsg("An error occurred while allocating.");
+            }
+        }
+    };
 
     return (
         <div className="module-page">
@@ -29,13 +59,39 @@ function AllocationTransfer() {
                     <p className="module-subtitle">See who holds what, and route transfer requests when there's a conflict.</p>
                 </div>
                 <div className="module-actions">
-                    <button className="btn-primary">+ Allocate Asset</button>
+                    <button className="btn-primary" onClick={() => { setShowForm(!showForm); setErrorMsg(""); }}>
+                        {showForm ? "Close" : "+ Allocate Asset"}
+                    </button>
                 </div>
             </div>
 
             <div className="conflict-callout">
                 <strong>Conflict rule:</strong> an asset already held by someone can't be allocated again — the system shows who has it and offers a <em>Transfer Request</em> instead. E.g. Laptop AF-0114 is with Priya Shah; a second allocation attempt is blocked.
             </div>
+
+            {showForm && (
+                <div className="card-surface" style={{ marginBottom: 24 }}>
+                    <div className="form-panel">
+                        {errorMsg && <div className="login-error" style={{ gridColumn: "1 / -1", color: "red" }}>{errorMsg}</div>}
+                        <div className="form-field">
+                            <label>Asset</label>
+                            <input type="text" name="asset" value={form.asset} onChange={handleChange} placeholder="e.g. AF-0114 MacBook" />
+                        </div>
+                        <div className="form-field">
+                            <label>Assign To</label>
+                            <input type="text" name="assignedTo" value={form.assignedTo} onChange={handleChange} placeholder="e.g. Priya Shah" />
+                        </div>
+                        <div className="form-field" style={{ gridColumn: "1 / -1" }}>
+                            <label>Notes</label>
+                            <textarea rows={2} name="notes" value={form.notes} onChange={handleChange} placeholder="Optional notes" />
+                        </div>
+                        <div className="form-panel-actions">
+                            <button className="btn-secondary" onClick={() => setShowForm(false)}>Cancel</button>
+                            <button className="btn-primary" onClick={handleSubmit}>Allocate</button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <div className="card-surface">
                 <div className="tab-group">
@@ -50,21 +106,17 @@ function AllocationTransfer() {
                                 <tr>
                                     <th>Asset</th>
                                     <th>Held By</th>
-                                    <th>Department</th>
                                     <th>Allocated On</th>
-                                    <th>Expected Return</th>
                                     <th>Status</th>
                                     <th></th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {MOCK_ALLOCATIONS.map((a) => (
+                                {allocations.map((a) => (
                                     <tr key={a.id}>
                                         <td className="cell-strong">{a.asset}</td>
-                                        <td>{a.holder}</td>
-                                        <td>{a.dept}</td>
-                                        <td className="cell-muted">{a.allocatedOn}</td>
-                                        <td className="cell-muted">{a.expectedReturn}</td>
+                                        <td>{a.assignedTo}</td>
+                                        <td className="cell-muted">{a.date}</td>
                                         <td><span className={`status-pill ${STATUS_CLASS[a.status]}`}>{a.status}</span></td>
                                         <td className="row-actions">
                                             <button className="btn-text">Transfer</button>

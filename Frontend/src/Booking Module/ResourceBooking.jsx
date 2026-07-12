@@ -1,20 +1,69 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import axios from "axios";
 import "../shared/moduleStyles.css";
 import "./ResourceBooking.css";
-
-// TODO: replace with API.get("/bookings")
-const MOCK_BOOKINGS = [
-    { id: 1, resource: "Room B2", bookedBy: "Priya Shah", date: "2026-07-12", slot: "09:00 – 10:00", status: "Completed" },
-    { id: 2, resource: "Room B2", bookedBy: "Raj Malhotra", date: "2026-07-12", slot: "10:00 – 11:00", status: "Ongoing" },
-    { id: 3, resource: "Toyota Innova", bookedBy: "Field Support", date: "2026-07-13", slot: "08:00 – 18:00", status: "Upcoming" },
-    { id: 4, resource: "Conference Room A", bookedBy: "Sana Iyer", date: "2026-07-14", slot: "14:00 – 15:30", status: "Upcoming" },
-    { id: 5, resource: "Room B2", bookedBy: "Neha Kapoor", date: "2026-07-11", slot: "13:00 – 14:00", status: "Cancelled" },
-];
 
 const STATUS_CLASS = { Upcoming: "purple", Ongoing: "green", Completed: "grey", Cancelled: "red" };
 
 function ResourceBooking() {
     const [showForm, setShowForm] = useState(false);
+    const [bookings, setBookings] = useState([]);
+    const [editingId, setEditingId] = useState(null);
+    const [form, setForm] = useState({ resource: "", date: "", startTime: "", endTime: "" });
+
+    const fetchBookings = () => {
+        axios.get("http://localhost:5000/api/bookings")
+            .then(res => setBookings(res.data))
+            .catch(err => console.error(err));
+    };
+
+    useEffect(() => {
+        fetchBookings();
+    }, []);
+
+    const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+
+    const handleSave = async () => {
+        const payload = {
+            resource: form.resource,
+            user: localStorage.getItem("userName") || "Admin User",
+            startTime: `${form.date} ${form.startTime}`,
+            endTime: `${form.date} ${form.endTime}`,
+            status: "Upcoming"
+        };
+
+        try {
+            if (editingId) {
+                await axios.put(`http://localhost:5000/api/bookings/${editingId}`, payload);
+            } else {
+                await axios.post("http://localhost:5000/api/bookings", payload);
+            }
+            setShowForm(false);
+            setEditingId(null);
+            setForm({ resource: "", date: "", startTime: "", endTime: "" });
+            fetchBookings();
+        } catch (err) {
+            console.error(err);
+            alert("Error saving booking");
+        }
+    };
+
+    const handleCancel = async (id) => {
+        try {
+            await axios.delete(`http://localhost:5000/api/bookings/${id}`);
+            fetchBookings();
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const handleReschedule = (b) => {
+        setEditingId(b.id);
+        const [date, startTime] = (b.startTime || "").split(" ");
+        const [_, endTime] = (b.endTime || "").split(" ");
+        setForm({ resource: b.resource, date: date || "", startTime: startTime || "", endTime: endTime || "" });
+        setShowForm(true);
+    };
 
     return (
         <div className="module-page">
@@ -35,7 +84,7 @@ function ResourceBooking() {
                     <div className="form-panel">
                         <div className="form-field">
                             <label>Resource</label>
-                            <select defaultValue="">
+                            <select name="resource" value={form.resource} onChange={handleChange}>
                                 <option value="" disabled>Select a shared resource</option>
                                 <option>Room B2</option>
                                 <option>Conference Room A</option>
@@ -44,19 +93,19 @@ function ResourceBooking() {
                         </div>
                         <div className="form-field">
                             <label>Date</label>
-                            <input type="date" />
+                            <input type="date" name="date" value={form.date} onChange={handleChange} />
                         </div>
                         <div className="form-field">
                             <label>Start Time</label>
-                            <input type="time" />
+                            <input type="time" name="startTime" value={form.startTime} onChange={handleChange} />
                         </div>
                         <div className="form-field">
                             <label>End Time</label>
-                            <input type="time" />
+                            <input type="time" name="endTime" value={form.endTime} onChange={handleChange} />
                         </div>
                         <div className="form-panel-actions">
-                            <button className="btn-secondary" onClick={() => setShowForm(false)}>Cancel</button>
-                            <button className="btn-primary">Check Availability &amp; Book</button>
+                            <button className="btn-secondary" onClick={() => { setShowForm(false); setEditingId(null); }}>Cancel</button>
+                            <button className="btn-primary" onClick={handleSave}>Check Availability &amp; Book</button>
                         </div>
                     </div>
                 )}
@@ -79,23 +128,27 @@ function ResourceBooking() {
                             </tr>
                         </thead>
                         <tbody>
-                            {MOCK_BOOKINGS.map((b) => (
-                                <tr key={b.id}>
-                                    <td className="cell-strong">{b.resource}</td>
-                                    <td>{b.bookedBy}</td>
-                                    <td className="cell-muted">{b.date}</td>
-                                    <td>{b.slot}</td>
-                                    <td><span className={`status-pill ${STATUS_CLASS[b.status]}`}>{b.status}</span></td>
-                                    <td>
-                                        {b.status === "Upcoming" && (
-                                            <div className="row-actions">
-                                                <button className="btn-text">Reschedule</button>
-                                                <button className="btn-text">Cancel</button>
-                                            </div>
-                                        )}
-                                    </td>
-                                </tr>
-                            ))}
+                            {bookings.map((b) => {
+                                const [date, startTime] = (b.startTime || "").split(" ");
+                                const [_, endTime] = (b.endTime || "").split(" ");
+                                return (
+                                    <tr key={b.id}>
+                                        <td className="cell-strong">{b.resource}</td>
+                                        <td>{b.user}</td>
+                                        <td className="cell-muted">{date}</td>
+                                        <td>{startTime} – {endTime}</td>
+                                        <td><span className={`status-pill ${STATUS_CLASS[b.status] || "grey"}`}>{b.status}</span></td>
+                                        <td>
+                                            {b.status === "Upcoming" && (
+                                                <div className="row-actions">
+                                                    <button className="btn-text" onClick={() => handleReschedule(b)}>Reschedule</button>
+                                                    <button className="btn-text" onClick={() => handleCancel(b.id)}>Cancel</button>
+                                                </div>
+                                            )}
+                                        </td>
+                                    </tr>
+                                )
+                            })}
                         </tbody>
                     </table>
                 </div>

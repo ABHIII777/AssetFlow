@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import "./Home.css";
 
 // TODO: replace mock data with real API calls (GET /assets/summary, /bookings, /maintenance, /allocations)
@@ -14,20 +15,18 @@ const MOCK_STATS = {
 
 const MOCK_OVERDUE_COUNT = 3;
 
-const MOCK_ACTIVITY = [
-    { id: 1, text: "Laptop AF-0114 allocated to Priya Shah — IT dept", time: "10 min ago" },
-    { id: 2, text: "Room B2 booking confirmed — 2:00 PM to 3:00 PM", time: "42 min ago" },
-    { id: 3, text: "Projector AF-0062 maintenance resolved", time: "1 hr ago" },
-    { id: 4, text: "Transfer request approved — Chair AF-0231 to Facilities", time: "3 hrs ago" },
-    { id: 5, text: 'Audit cycle "Q3 IT Assets" closed with 2 discrepancies', time: "Yesterday" },
-];
-
 function Home() {
     const navigate = useNavigate();
     const [stats, setStats] = useState(MOCK_STATS);
     const [loading, setLoading] = useState(true);
+    const [activity, setActivity] = useState([]);
 
     useEffect(() => {
+        // Fetch activity logs
+        axios.get("http://localhost:5000/api/logs")
+            .then(res => setActivity(res.data))
+            .catch(err => console.error(err));
+
         // Simulated fetch — swap for real API.get("/dashboard/summary")
         const t = setTimeout(() => {
             setStats(MOCK_STATS);
@@ -122,10 +121,10 @@ function Home() {
                     <div className="dash-empty">Loading...</div>
                 ) : (
                     <ul className="dash-activity-list">
-                        {MOCK_ACTIVITY.map((a) => (
+                        {activity.slice(0, 5).map((a) => (
                             <li key={a.id} className="dash-activity-item">
                                 <span className="dash-activity-dot" />
-                                <span className="dash-activity-text">{a.text}</span>
+                                <span className="dash-activity-text">{a.action}</span>
                                 <span className="dash-activity-time">{a.time}</span>
                             </li>
                         ))}

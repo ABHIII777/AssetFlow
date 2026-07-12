@@ -31,15 +31,18 @@ function Sidebar() {
             <nav className="sidebar-nav">
                 <p className="nav-label">Menu</p>
 
-                {NAV_ITEMS.map((item) => (
-                    <NavLink
-                        key={item.to}
-                        to={item.to}
-                        className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}
-                    >
-                        {item.label}
-                    </NavLink>
-                ))}
+                {NAV_ITEMS.map((item) => {
+                    if (item.to === "/organization-setup" && userRole === "Employee") return null;
+                    return (
+                        <NavLink
+                            key={item.to}
+                            to={item.to}
+                            className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}
+                        >
+                            {item.label}
+                        </NavLink>
+                    );
+                })}
             </nav>
 
             {/* Bottom */}

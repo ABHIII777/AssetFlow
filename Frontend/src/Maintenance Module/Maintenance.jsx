@@ -1,21 +1,44 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import axios from "axios";
 import "../shared/moduleStyles.css";
 import "./Maintenance.css";
-
-// TODO: replace with API.get("/maintenance-requests")
-const MOCK_REQUESTS = [
-    { id: 1, asset: 'AF-0198 — Dell Monitor 27"', issue: "Screen flickering intermittently", priority: "High", stage: "Pending", raisedBy: "Sana Iyer" },
-    { id: 2, asset: "AF-0045 — Toyota Innova", issue: "AC not cooling", priority: "Medium", stage: "Approved", raisedBy: "Field Support" },
-    { id: 3, asset: "AF-0301 — Conference Table", issue: "Leg bracket loose", priority: "Low", stage: "Technician Assigned", raisedBy: "Facilities" },
-    { id: 4, asset: 'AF-0114 — MacBook Pro 14"', issue: "Battery draining fast", priority: "Medium", stage: "In Progress", raisedBy: "Priya Shah" },
-    { id: 5, asset: "AF-0062 — Epson Projector", issue: "Bulb replacement", priority: "High", stage: "Resolved", raisedBy: "Facilities" },
-];
 
 const STAGES = ["Pending", "Approved", "Technician Assigned", "In Progress", "Resolved"];
 const PRIORITY_CLASS = { High: "red", Medium: "orange", Low: "grey" };
 
 function Maintenance() {
     const [showForm, setShowForm] = useState(false);
+    const [requests, setRequests] = useState([]);
+    const [form, setForm] = useState({ asset: "", priority: "Medium", issue: "" });
+
+    const fetchRequests = () => {
+        axios.get("http://localhost:5000/api/maintenance")
+            .then(res => setRequests(res.data))
+            .catch(err => console.error(err));
+    };
+
+    useEffect(() => {
+        fetchRequests();
+    }, []);
+
+    const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+
+    const handleSubmit = async () => {
+        try {
+            await axios.post("http://localhost:5000/api/maintenance", {
+                ...form,
+                loggedBy: localStorage.getItem("userName") || "Admin User",
+                date: new Date().toISOString().split("T")[0],
+                status: "Pending"
+            });
+            setShowForm(false);
+            setForm({ asset: "", priority: "Medium", issue: "" });
+            fetchRequests();
+        } catch (err) {
+            console.error(err);
+            alert("Error submitting maintenance request");
+        }
+    };
 
     return (
         <div className="module-page">
@@ -36,7 +59,7 @@ function Maintenance() {
                     <div className="form-panel">
                         <div className="form-field">
                             <label>Asset</label>
-                            <select defaultValue="">
+                            <select name="asset" value={form.asset} onChange={handleChange}>
                                 <option value="" disabled>Select asset</option>
                                 <option>AF-0114 — MacBook Pro 14"</option>
                                 <option>AF-0198 — Dell Monitor 27"</option>
@@ -45,7 +68,7 @@ function Maintenance() {
                         </div>
                         <div className="form-field">
                             <label>Priority</label>
-                            <select defaultValue="Medium">
+                            <select name="priority" value={form.priority} onChange={handleChange}>
                                 <option>Low</option>
                                 <option>Medium</option>
                                 <option>High</option>
@@ -57,11 +80,11 @@ function Maintenance() {
                         </div>
                         <div className="form-field" style={{ gridColumn: "1 / -1" }}>
                             <label>Describe the Issue</label>
-                            <textarea rows={3} placeholder="What's wrong with this asset?" />
+                            <textarea rows={3} name="issue" value={form.issue} onChange={handleChange} placeholder="What's wrong with this asset?" />
                         </div>
                         <div className="form-panel-actions">
                             <button className="btn-secondary" onClick={() => setShowForm(false)}>Cancel</button>
-                            <button className="btn-primary">Submit Request</button>
+                            <button className="btn-primary" onClick={handleSubmit}>Submit Request</button>
                         </div>
                     </div>
                 </div>
@@ -73,21 +96,21 @@ function Maintenance() {
                         <div className="maint-column-header">
                             <span>{stage}</span>
                             <span className="maint-count">
-                                {MOCK_REQUESTS.filter((r) => r.stage === stage).length}
+                                {requests.filter((r) => (r.stage || r.status) === stage).length}
                             </span>
                         </div>
                         <div className="maint-column-body">
-                            {MOCK_REQUESTS.filter((r) => r.stage === stage).map((r) => (
+                            {requests.filter((r) => (r.stage || r.status) === stage).map((r) => (
                                 <div className="maint-card" key={r.id}>
                                     <div className="maint-card-top">
                                         <span className="maint-asset">{r.asset}</span>
                                         <span className={`status-pill ${PRIORITY_CLASS[r.priority]}`}>{r.priority}</span>
                                     </div>
                                     <p className="maint-issue">{r.issue}</p>
-                                    <p className="maint-by">Raised by {r.raisedBy}</p>
+                                    <p className="maint-by">Raised by {r.raisedBy || r.loggedBy}</p>
                                 </div>
                             ))}
-                            {MOCK_REQUESTS.filter((r) => r.stage === stage).length === 0 && (
+                            {requests.filter((r) => (r.stage || r.status) === stage).length === 0 && (
                                 <p className="maint-empty">Nothing here</p>
                             )}
                         </div>

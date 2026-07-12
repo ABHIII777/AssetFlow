@@ -1,0 +1,113 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Department {
+  id     Int     @id @default(autoincrement())
+  name   String
+  head   String?
+  parent String?
+  status String  @default("Active")
+}
+
+model Category {
+  id         Int    @id @default(autoincrement())
+  name       String
+  fields     String
+  assetCount Int    @default(0)
+}
+
+model Employee {
+  id       Int     @id @default(autoincrement())
+  name     String
+  email    String  @unique
+  password String
+  dept     String?
+  role     String  @default("Employee")
+  status   String  @default("Active")
+}
+
+model Asset {
+  id         Int     @id @default(autoincrement())
+  tag        String  @unique
+  name       String
+  category   String
+  status     String  @default("Available")
+  condition  String  @default("Excellent")
+  location   String?
+  assignedTo String?
+  dept       String?
+  shared     Boolean @default(false)
+}
+
+model Allocation {
+  id         Int     @id @default(autoincrement())
+  asset      String
+  assignedTo String
+  date       String
+  status     String
+  notes      String?
+}
+
+model Transfer {
+  id         Int     @id @default(autoincrement())
+  asset      String
+  from       String
+  to         String
+  reason     String
+  status     String
+  date       String
+}
+
+model Booking {
+  id        Int    @id @default(autoincrement())
+  resource  String
+  user      String
+  startTime String
+  endTime   String
+  status    String
+}
+
+model MaintenanceRequest {
+  id          Int    @id @default(autoincrement())
+  asset       String
+  issue       String
+  loggedBy    String
+  date        String
+  status      String
+  priority    String
+}
+
+model AuditCycle {
+  id        Int    @id @default(autoincrement())
+  name      String
+  startDate String
+  status    String
+  progress  Int
+}
+
+model Discrepancy {
+  id               Int    @id @default(autoincrement())
+  asset            String
+  expectedLocation String
+  actualLocation   String
+  status           String
+}
+
+model Notification {
+  id      Int    @id @default(autoincrement())
+  message String
+  time    String
+  type    String
+}
+
+model Log {
+  id      Int    @id @default(autoincrement())
+  action  String
+  time    String
+}
