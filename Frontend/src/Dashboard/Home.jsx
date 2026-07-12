@@ -68,14 +68,16 @@ function Home() {
                     <div className="dash-card" key={k.key}>
                         <div className="dash-card-top">
                             <div className="dash-icon">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                     {ICONS[k.icon]}
                                 </svg>
                             </div>
                             <span className={`dash-badge ${k.badgeClass}`}>{k.badge}</span>
                         </div>
-                        <p className="dash-label">{k.label}</p>
-                        <p className="dash-value">{loading ? "—" : k.value}</p>
+                        <div className="dash-body">
+                            <p className="dash-label">{k.label}</p>
+                            <p className="dash-value">{loading ? "—" : k.value}</p>
+                        </div>
                     </div>
                 ))}
             </div>
