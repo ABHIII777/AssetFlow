@@ -8,17 +8,16 @@
 
 /* ── Header ── */
 .dash-header {
-    margin-top: -15px;
-    margin-bottom: 32px;
+    margin-bottom: 24px;
 }
 
 .dash-title {
     font-family: 'Sora', sans-serif;
-    font-size: 30px;
+    font-size: 24px;
     font-weight: 700;
     color: #1a1a2e;
     letter-spacing: -0.02em;
-    margin-bottom: 8px;
+    margin-bottom: 4px;
 }
 
 .dash-name {
@@ -26,44 +25,46 @@
 }
 
 .dash-subtitle {
-    font-size: 14px;
+    font-size: 13px;
     color: #888;
 }
 
-/* ── Cards grid ── */
+/* ── Cards row (single row) ── */
 .dash-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
+    display: flex;
+    gap: 12px;
 }
 
 /* ── Card ── */
 .dash-card {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
     background: #ffffff;
-    border-radius: 16px;
-    padding: 22px;
+    border-radius: 12px;
+    padding: 16px 18px;
     border: 1px solid #ececf5;
     box-shadow: 0 2px 12px rgba(100, 80, 180, 0.06);
     transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .dash-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 24px rgba(100, 80, 180, 0.12);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(100, 80, 180, 0.1);
 }
 
-/* ── Card top row: icon + badge ── */
+/* ── Card top row: icon left, badge right ── */
 .dash-card-top {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 16px;
 }
 
 .dash-icon {
-    width: 42px;
-    height: 42px;
-    border-radius: 12px;
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
     background: rgba(124, 92, 191, 0.1);
     color: #7c5cbf;
     display: flex;
@@ -73,9 +74,9 @@
 
 /* Badges */
 .dash-badge {
-    font-size: 11px;
+    font-size: 9px;
     font-weight: 600;
-    padding: 3px 9px;
+    padding: 1px 6px;
     border-radius: 20px;
     letter-spacing: 0.02em;
 }
@@ -85,16 +86,24 @@
 .dash-badge.orange { background: #fff4e6; color: #e07b2a; }
 .dash-badge.red    { background: #fef0f0; color: #e05252; }
 
-/* ── Label & Value ── */
+/* ── Centered body ── */
+.dash-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
 .dash-label {
-    font-size: 13px;
+    font-size: 11px;
     color: #888;
     font-weight: 500;
-    margin-bottom: 6px;
+    margin-bottom: 2px;
 }
 
 .dash-value {
-    font-size: 28px;
+    font-size: 20px;
     font-weight: 700;
     color: #1a1a2e;
     letter-spacing: -0.02em;
@@ -102,11 +111,9 @@
 }
 
 /* Responsive */
-@media (max-width: 1100px) {
-    .dash-grid { grid-template-columns: repeat(2, 1fr); }
-}
-@media (max-width: 600px) {
-    .dash-grid { grid-template-columns: 1fr; }
+@media (max-width: 768px) {
+    .dash-grid { flex-wrap: wrap; }
+    .dash-card { flex: 1 1 45%; }
 }
 
 /* ── Overdue alert bar ── */

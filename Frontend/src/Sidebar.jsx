@@ -26,15 +26,8 @@ function Sidebar({ isOpen, onClose }) {
             />
             <aside className={`sidebar ${isOpen ? "sidebar--open" : ""}`}>
 
-                {/* Branding */}
-                <div className="sidebar-brand">
-                    <p className="sidebar-title">{orgName}</p>
-                    <p className="brand-subtitle">Asset &amp; Resource Management</p>
-                </div>
-
                 {/* Nav */}
                 <nav className="sidebar-nav">
-                    <p className="nav-label">Menu</p>
 
                     {NAV_ITEMS.map((item) => (
                         <NavLink
