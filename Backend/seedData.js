@@ -4,19 +4,11 @@ const prisma = new PrismaClient();
 
 async function main() {
   console.log("Seeding Admin User...");
-  // Check if admin exists
-  const existingAdmin = await prisma.employee.findUnique({ where: { email: "admin@yaksha.com" } });
-  if (!existingAdmin) {
-    await prisma.employee.create({
-      data: { name: "System Admin", email: "admin@yaksha.com", password: "admin", dept: "Information Technology", role: "Admin", status: "Active" }
-    });
-  } else {
-    // Ensure role and password are set for testing
-    await prisma.employee.update({
-      where: { email: "admin@yaksha.com" },
-      data: { role: "Admin", password: "admin" }
-    });
-  }
+  // Remove old dummy users and ensure clean admin
+  await prisma.employee.deleteMany({});
+  await prisma.employee.create({
+    data: { name: "System Admin", email: "admin@assetflow.com", password: "admin@assetflow89", role: "Admin", status: "Active" }
+  });
 
   console.log("Seeding Allocations...");
   await prisma.allocation.deleteMany({});
