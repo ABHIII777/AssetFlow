@@ -3,3 +3,7 @@ node_modules
 .env
 
 /generated/prisma
+
+# SQLite database — binary file, cannot be merged, regenerate locally
+*.db
+*.db-journal

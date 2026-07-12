@@ -10,3 +10,45 @@
 .org-note strong {
     color: #7c5cbf;
 }
+
+.emp-select {
+    padding: 6px 8px;
+    border-radius: 8px;
+    border: 1px solid #e2e2ef;
+    font-size: 12px;
+    font-family: inherit;
+    color: #3a3a5c;
+    background: #fafafe;
+    cursor: pointer;
+    min-width: 130px;
+}
+
+.emp-select:focus {
+    outline: none;
+    border-color: #b7a4e0;
+    background: #fff;
+}
+
+.btn-save {
+    padding: 5px 14px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    border: 1px solid #ddd8f0;
+    background: #ffffff;
+    color: #bbb;
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.btn-save--active {
+    background: linear-gradient(135deg, #7c5cbf, #5c3fa3);
+    color: #ffffff;
+    border: none;
+    box-shadow: 0 4px 12px rgba(92, 63, 163, 0.25);
+}
+
+.btn-save--active:hover {
+    opacity: 0.92;
+}
