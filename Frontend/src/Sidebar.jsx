@@ -13,7 +13,7 @@ const NAV_ITEMS = [
     { to: "/notifications", label: "Notifications" },
 ];
 
-function Sidebar() {
+function Sidebar({ isOpen, onClose }) {
     const orgName = localStorage.getItem("orgName") || "AssetFlow";
     const userName = localStorage.getItem("userName") || "Admin User";
     const userRole = localStorage.getItem("userRole") || "Admin";
@@ -34,6 +34,24 @@ function Sidebar() {
                 {NAV_ITEMS.map((item) => {
                     if (item.to === "/organization-setup" && userRole === "Employee") return null;
                     return (
+        <>
+            <div
+                className={`sidebar-overlay ${isOpen ? "sidebar-overlay--visible" : ""}`}
+                onClick={onClose}
+            />
+            <aside className={`sidebar ${isOpen ? "sidebar--open" : ""}`}>
+
+                {/* Branding */}
+                <div className="sidebar-brand">
+                    <p className="sidebar-title">{orgName}</p>
+                    <p className="brand-subtitle">Asset &amp; Resource Management</p>
+                </div>
+
+                {/* Nav */}
+                <nav className="sidebar-nav">
+                    <p className="nav-label">Menu</p>
+
+                    {NAV_ITEMS.map((item) => (
                         <NavLink
                             key={item.to}
                             to={item.to}
@@ -52,11 +70,26 @@ function Sidebar() {
                     <div className="user-info">
                         <span className="user-name">{userName}</span>
                         <span className="user-role">{userRole}</span>
+                            onClick={onClose}
+                        >
+                            {item.label}
+                        </NavLink>
+                    ))}
+                </nav>
+
+                {/* Bottom */}
+                <div className="sidebar-bottom">
+                    <div className="user-profile">
+                        <div className="user-avatar">{userName[0] || "A"}</div>
+                        <div className="user-info">
+                            <span className="user-name">{userName}</span>
+                            <span className="user-role">{userRole}</span>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-        </aside>
+            </aside>
+        </>
     );
 }
 

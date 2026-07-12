@@ -82,7 +82,7 @@
 
 /* ── Bottom section ── */
 .sidebar-bottom {
-    margin-top: auto;
+    margin-bottom: 40px;
     display: flex;
     flex-direction: column;
     gap: 16px;
@@ -175,4 +175,64 @@
     color: #ffffff;
     font-weight: 600;
     box-shadow: 0 4px 12px rgba(92, 63, 163, 0.3);
+}
+
+/* ── Overlay for mobile ── */
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 99;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.sidebar-overlay--visible {
+    opacity: 1;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+    .sidebar-overlay {
+        display: block;
+        pointer-events: none;
+    }
+
+    .sidebar-overlay--visible {
+        pointer-events: auto;
+    }
+
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: -280px;
+        width: 260px;
+        height: 100vh;
+        z-index: 100;
+        transition: left 0.3s ease;
+        box-shadow: none;
+        padding: 24px 16px;
+    }
+
+    .sidebar--open {
+        left: 0;
+        box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
+    }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+    .sidebar {
+        width: 200px;
+        padding: 24px 12px;
+    }
+
+    .sidebar-title {
+        font-size: 16px;
+    }
+
+    .nav-item {
+        padding: 10px 12px;
+        font-size: 13px;
+    }
 }
