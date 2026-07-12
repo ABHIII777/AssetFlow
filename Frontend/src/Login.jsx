@@ -23,8 +23,8 @@ function Login() {
 
         try {
             const url = mode === "login" 
-                ? "http://localhost:4000/api/auth/login" 
-                : "http://localhost:4000/api/auth/signup";
+                ? "http://localhost:5000/api/auth/login" 
+                : "http://localhost:5000/api/auth/signup";
                 
             const response = await axios.post(url, form);
             

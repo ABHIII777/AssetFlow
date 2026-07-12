@@ -43,7 +43,7 @@ node seedData.js
 
 ### Note on Admin Access
 The `seedData.js` script provisions a default Admin user so you can access all protected frontend routes (like Organization Setup).
-- **Email:** `admin@yaksha.com`
+- **Email:** `admin@yassetflow.com`
 - **Password:** `admin`
 
 ## 5. Start the Server
