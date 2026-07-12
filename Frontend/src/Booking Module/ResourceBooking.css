@@ -1,0 +1,26 @@
+.booking-legend {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    color: #888;
+    background: #fafafe;
+    border: 1px solid #f0f0f8;
+    padding: 12px 16px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    line-height: 1.6;
+}
+
+.legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.row-actions {
+    display: flex;
+    gap: 12px;
+    white-space: nowrap;
+}

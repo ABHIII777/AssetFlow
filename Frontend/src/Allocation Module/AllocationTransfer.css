@@ -1,0 +1,18 @@
+.conflict-callout {
+    background: #fff8ec;
+    border: 1px solid #f6e4bd;
+    color: #8a6416;
+    font-size: 13px;
+    line-height: 1.6;
+    padding: 14px 18px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+}
+
+.conflict-callout strong { color: #7c5cbf; }
+
+.row-actions {
+    display: flex;
+    gap: 12px;
+    white-space: nowrap;
+}
