@@ -50,9 +50,15 @@ router.get('/employees', async (req, res) => {
   }
 });
 
+// TODO: add auth middleware to verify the requester is Admin
 router.put('/employees/:id', async (req, res) => {
   const { role, dept } = req.body;
   try {
+    // Prevent anyone from creating an Admin via this endpoint
+    if (role === 'Admin') {
+      return res.status(403).json({ error: 'Cannot promote to Admin through this endpoint' });
+    }
+
     const employee = await prisma.employee.update({
       where: { id: parseInt(req.params.id) },
       data: { role, dept }

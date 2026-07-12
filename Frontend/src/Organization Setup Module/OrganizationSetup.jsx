@@ -141,6 +141,8 @@ function EmployeesTab() {
     const [departments, setDepartments] = useState([]);
     const [dirty, setDirty] = useState({});
 
+    const isAdmin = localStorage.getItem("userRole") === "Admin";
+
     const fetch = useCallback(() => {
         axios.get(`${API}/employees`).then(res => setEmployees(res.data)).catch(err => console.error(err));
         axios.get(`${API}/departments`).then(res => setDepartments(res.data)).catch(err => console.error(err));
@@ -182,7 +184,7 @@ function EmployeesTab() {
                         <th>Department</th>
                         <th>Role</th>
                         <th>Status</th>
-                        <th></th>
+                        {isAdmin && <th></th>}
                     </tr>
                 </thead>
                 <tbody>
@@ -191,38 +193,48 @@ function EmployeesTab() {
                             <td className="cell-strong">{e.name}</td>
                             <td className="cell-muted">{e.email}</td>
                             <td>
-                                <select
-                                    className="emp-select"
-                                    value={current(e, "dept") || ""}
-                                    onChange={(ev) => updateField(e.id, "dept", ev.target.value)}
-                                >
-                                    <option value="">—</option>
-                                    {departments.map((d) => (
-                                        <option key={d.id} value={d.name}>{d.name}</option>
-                                    ))}
-                                </select>
+                                {isAdmin ? (
+                                    <select
+                                        className="emp-select"
+                                        value={current(e, "dept") || ""}
+                                        onChange={(ev) => updateField(e.id, "dept", ev.target.value)}
+                                    >
+                                        <option value="">—</option>
+                                        {departments.map((d) => (
+                                            <option key={d.id} value={d.name}>{d.name}</option>
+                                        ))}
+                                    </select>
+                                ) : (
+                                    e.dept || "—"
+                                )}
                             </td>
                             <td>
-                                <select
-                                    className="emp-select"
-                                    value={current(e, "role")}
-                                    onChange={(ev) => updateField(e.id, "role", ev.target.value)}
-                                >
-                                    {ROLES.map((r) => (
-                                        <option key={r} value={r}>{r}</option>
-                                    ))}
-                                </select>
+                                {isAdmin ? (
+                                    <select
+                                        className="emp-select"
+                                        value={current(e, "role")}
+                                        onChange={(ev) => updateField(e.id, "role", ev.target.value)}
+                                    >
+                                        {ROLES.map((r) => (
+                                            <option key={r} value={r}>{r}</option>
+                                        ))}
+                                    </select>
+                                ) : (
+                                    <span className={`status-pill ${e.role === "Employee" ? "grey" : "purple"}`}>{e.role}</span>
+                                )}
                             </td>
                             <td><StatusPill value={e.status} /></td>
-                            <td>
-                                <button
-                                    className={`btn-save ${hasChanges(e.id) ? "btn-save--active" : ""}`}
-                                    onClick={() => save(e.id)}
-                                    disabled={!hasChanges(e.id)}
-                                >
-                                    Save
-                                </button>
-                            </td>
+                            {isAdmin && (
+                                <td>
+                                    <button
+                                        className={`btn-save ${hasChanges(e.id) ? "btn-save--active" : ""}`}
+                                        onClick={() => save(e.id)}
+                                        disabled={!hasChanges(e.id)}
+                                    >
+                                        Save
+                                    </button>
+                                </td>
+                            )}
                         </tr>
                     ))}
                 </tbody>
