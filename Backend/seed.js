@@ -21,16 +21,6 @@ async function main() {
     ]
   });
 
-  await prisma.employee.createMany({
-    data: [
-      { name: "Priya Shah", email: "priya.shah@org.com", password: "password123", dept: "Information Technology", role: "Department Head", status: "Active" },
-      { name: "Raj Malhotra", email: "raj.malhotra@org.com", password: "password123", dept: "Facilities", role: "Asset Manager", status: "Active" },
-      { name: "Amit Verma", email: "amit.verma@org.com", password: "password123", dept: "Field Support", role: "Employee", status: "Active" },
-      { name: "Neha Kapoor", email: "neha.kapoor@org.com", password: "password123", dept: "Finance", role: "Employee", status: "Inactive" },
-      { name: "Sana Iyer", email: "sana.iyer@org.com", password: "password123", dept: "Information Technology", role: "Employee", status: "Active" },
-    ]
-  });
-
   await prisma.asset.createMany({
     data: [
         { tag: "AF-0114", name: 'MacBook Pro 14"', category: "Electronics", status: "Allocated", location: "IT Floor 2", dept: "Information Technology", condition: "Good", shared: false },

@@ -21,7 +21,7 @@ router.post('/signup', async (req, res) => {
   const { name, email, password } = req.body;
   try {
     const user = await prisma.employee.create({
-      data: { name, email, password }
+      data: { name, email, password, role: 'Employee' }
     });
     res.json({ token: 'mock-token', user });
   } catch (error) {
