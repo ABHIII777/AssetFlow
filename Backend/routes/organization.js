@@ -50,4 +50,18 @@ router.get('/employees', async (req, res) => {
   }
 });
 
+router.put('/employees/:id', async (req, res) => {
+  const { role, dept } = req.body;
+  try {
+    const employee = await prisma.employee.update({
+      where: { id: parseInt(req.params.id) },
+      data: { role, dept }
+    });
+    const { password, ...safe } = employee;
+    res.json(safe);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;

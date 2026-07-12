@@ -1,7 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import "../shared/moduleStyles.css";
 import "./OrganizationSetup.css";
+
+const API = "http://localhost:4000/api";
+
+const ROLES = ["Employee", "Department Head", "Asset Manager"];
 
 const TABS = [
     { key: "departments", label: "Departments" },
@@ -14,7 +18,6 @@ function StatusPill({ value }) {
     return <span className={`status-pill ${cls}`}>{value}</span>;
 }
 
-// Event bus for add button
 const ADD_EVENT = new EventTarget();
 
 function DepartmentsTab() {
@@ -23,7 +26,7 @@ function DepartmentsTab() {
     const [form, setForm] = useState({ name: "", head: "", parent: "", status: "Active" });
 
     const fetchDepartments = () => {
-        axios.get("http://localhost:5000/api/departments")
+        axios.get(`${API}/departments`)
             .then(res => setDepartments(res.data))
             .catch(err => console.error(err));
     };
@@ -39,7 +42,7 @@ function DepartmentsTab() {
 
     const handleSubmit = async () => {
         try {
-            await axios.post("http://localhost:5000/api/departments", form);
+            await axios.post(`${API}/departments`, form);
             setShowForm(false);
             setForm({ name: "", head: "", parent: "", status: "Active" });
             fetchDepartments();
@@ -102,7 +105,7 @@ function CategoriesTab() {
     const [categories, setCategories] = useState([]);
 
     useEffect(() => {
-        axios.get("http://localhost:5000/api/categories")
+        axios.get(`${API}/categories`)
             .then(res => setCategories(res.data))
             .catch(err => console.error(err));
     }, []);
@@ -135,12 +138,39 @@ function CategoriesTab() {
 
 function EmployeesTab() {
     const [employees, setEmployees] = useState([]);
+    const [departments, setDepartments] = useState([]);
+    const [dirty, setDirty] = useState({});
 
-    useEffect(() => {
-        axios.get("http://localhost:5000/api/employees")
-            .then(res => setEmployees(res.data))
-            .catch(err => console.error(err));
+    const fetch = useCallback(() => {
+        axios.get(`${API}/employees`).then(res => setEmployees(res.data)).catch(err => console.error(err));
+        axios.get(`${API}/departments`).then(res => setDepartments(res.data)).catch(err => console.error(err));
     }, []);
+
+    useEffect(() => { fetch(); }, [fetch]);
+
+    const updateField = (id, field, value) => {
+        setDirty(prev => ({ ...prev, [id]: { ...prev[id], [field]: value } }));
+    };
+
+    const save = async (id) => {
+        const updates = dirty[id];
+        if (!updates) return;
+        try {
+            await axios.put(`${API}/employees/${id}`, updates);
+            setDirty(prev => { const { [id]: _, ...rest } = prev; return rest; });
+            fetch();
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const current = (emp, field) => {
+        return dirty[emp.id]?.[field] ?? emp[field];
+    };
+
+    const hasChanges = (id) => {
+        return dirty[id] && (dirty[id].role || dirty[id].dept);
+    };
 
     return (
         <div className="table-wrap">
@@ -160,12 +190,39 @@ function EmployeesTab() {
                         <tr key={e.id}>
                             <td className="cell-strong">{e.name}</td>
                             <td className="cell-muted">{e.email}</td>
-                            <td>{e.dept || "—"}</td>
                             <td>
-                                <span className={`status-pill ${e.role === "Employee" ? "grey" : "purple"}`}>{e.role}</span>
+                                <select
+                                    className="emp-select"
+                                    value={current(e, "dept") || ""}
+                                    onChange={(ev) => updateField(e.id, "dept", ev.target.value)}
+                                >
+                                    <option value="">—</option>
+                                    {departments.map((d) => (
+                                        <option key={d.id} value={d.name}>{d.name}</option>
+                                    ))}
+                                </select>
+                            </td>
+                            <td>
+                                <select
+                                    className="emp-select"
+                                    value={current(e, "role")}
+                                    onChange={(ev) => updateField(e.id, "role", ev.target.value)}
+                                >
+                                    {ROLES.map((r) => (
+                                        <option key={r} value={r}>{r}</option>
+                                    ))}
+                                </select>
                             </td>
                             <td><StatusPill value={e.status} /></td>
-                            <td><button className="btn-text">Promote</button></td>
+                            <td>
+                                <button
+                                    className={`btn-save ${hasChanges(e.id) ? "btn-save--active" : ""}`}
+                                    onClick={() => save(e.id)}
+                                    disabled={!hasChanges(e.id)}
+                                >
+                                    Save
+                                </button>
+                            </td>
                         </tr>
                     ))}
                 </tbody>
