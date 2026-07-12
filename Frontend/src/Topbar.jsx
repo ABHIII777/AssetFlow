@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import "./Topbar.css";
 
-function Topbar() {
+function Topbar({ onMenuToggle }) {
     const navigate = useNavigate();
 
     const handleLogout = async () => {
@@ -15,8 +15,17 @@ function Topbar() {
 
     return (
         <div className="topbar">
-            {/* Left: Brand title */}
-            <Link to="/home" className="topbar-title">AssetFlow</Link>
+            {/* Left: Hamburger + Brand title */}
+            <div className="topbar-left">
+                <button className="hamburger-btn" onClick={onMenuToggle} title="Toggle menu">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="3" y1="6" x2="21" y2="6"/>
+                        <line x1="3" y1="12" x2="21" y2="12"/>
+                        <line x1="3" y1="18" x2="21" y2="18"/>
+                    </svg>
+                </button>
+                <Link to="/home" className="topbar-title">AssetFlow</Link>
+            </div>
 
             {/* Right: Icons */}
             <div className="topbar-right">

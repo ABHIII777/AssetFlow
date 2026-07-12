@@ -129,3 +129,18 @@
     text-align: center;
     margin-top: 4px;
 }
+
+/* ── Responsive ── */
+@media (max-width: 480px) {
+    .login-card {
+        width: 100%;
+        max-width: 380px;
+        margin: 16px;
+        padding: 28px 20px;
+        border-radius: 16px;
+    }
+
+    .login-brand {
+        font-size: 22px;
+    }
+}

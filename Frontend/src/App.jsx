@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
+import { useState } from "react";
 import Login from "./Login";
 import Home from "./Dashboard/Home";
 import Topbar from "./Topbar";
@@ -16,12 +17,14 @@ import Notifications from "./Notifications Module/Notifications";
 import "./App.css";
 
 function AppLayout() {
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+
     return (
         <div className="app-layout">
-            <Topbar />
+            <Topbar onMenuToggle={() => setSidebarOpen((prev) => !prev)} />
             <div className="app-body">
-                <Sidebar />
-                <main className="app-main">
+                <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+                <main className="app-main" onClick={() => setSidebarOpen(false)}>
                     <Outlet />
                 </main>
             </div>
