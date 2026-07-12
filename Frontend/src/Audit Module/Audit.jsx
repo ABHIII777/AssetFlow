@@ -1,24 +1,42 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import axios from "axios";
 import "../shared/moduleStyles.css";
 
-// TODO: replace with API.get("/audit-cycles")
-const MOCK_CYCLES = [
-    { id: 1, name: "Q3 IT Assets", scope: "Information Technology · IT Floor 2", range: "2026-07-01 to 2026-07-10", auditors: "Priya Shah, Raj Malhotra", status: "Closed", discrepancies: 2 },
-    { id: 2, name: "Facilities Half-Yearly", scope: "Facilities · All Locations", range: "2026-07-05 to 2026-07-20", auditors: "Raj Malhotra", status: "Active", discrepancies: 1 },
-    { id: 3, name: "Field Vehicles Check", scope: "Field Support · Parking B", range: "2026-07-15 to 2026-07-18", auditors: "Amit Verma", status: "Draft", discrepancies: 0 },
-];
-
-const MOCK_DISCREPANCIES = [
-    { id: 1, cycle: "Q3 IT Assets", asset: "AF-0209 — Wireless Mouse", finding: "Missing", note: "Not located in last known department" },
-    { id: 2, cycle: "Q3 IT Assets", asset: "AF-0176 — External SSD", finding: "Damaged", note: "Casing cracked, unit unusable" },
-    { id: 3, cycle: "Facilities Half-Yearly", asset: "AF-0244 — Office Cabinet", finding: "Missing", note: "Awaiting auditor confirmation" },
-];
-
-const STATUS_CLASS = { Draft: "grey", Active: "purple", Closed: "green" };
+const STATUS_CLASS = { Draft: "grey", Scheduled: "grey", Active: "purple", "In Progress": "purple", Completed: "green", Closed: "green" };
 const FINDING_CLASS = { Missing: "red", Damaged: "orange", Verified: "green" };
-
 function Audit() {
     const [tab, setTab] = useState("cycles");
+    const [cycles, setCycles] = useState([]);
+    const [discrepancies, setDiscrepancies] = useState([]);
+    const [showForm, setShowForm] = useState(false);
+    const [form, setForm] = useState({ name: "", startDate: "" });
+
+    const fetchCycles = () => {
+        axios.get("http://localhost:5000/api/audits").then(res => setCycles(res.data)).catch(console.error);
+        axios.get("http://localhost:5000/api/discrepancies").then(res => setDiscrepancies(res.data)).catch(console.error);
+    };
+
+    useEffect(() => {
+        fetchCycles();
+    }, []);
+
+    const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+
+    const handleSubmit = async () => {
+        try {
+            await axios.post("http://localhost:5000/api/audits", {
+                name: form.name,
+                startDate: form.startDate,
+                status: "Scheduled",
+                progress: 0
+            });
+            setShowForm(false);
+            setForm({ name: "", startDate: "" });
+            fetchCycles();
+        } catch (err) {
+            console.error(err);
+        }
+    };
 
     return (
         <div className="module-page">
@@ -28,7 +46,9 @@ function Audit() {
                     <p className="module-subtitle">Run structured verification cycles and auto-generate discrepancy reports.</p>
                 </div>
                 <div className="module-actions">
-                    <button className="btn-primary">+ Create Audit Cycle</button>
+                    <button className="btn-primary" onClick={() => setShowForm(!showForm)}>
+                        {showForm ? "Cancel" : "+ Create Audit Cycle"}
+                    </button>
                 </div>
             </div>
 
@@ -37,6 +57,22 @@ function Audit() {
                     <button className={`tab-btn ${tab === "cycles" ? "active" : ""}`} onClick={() => setTab("cycles")}>Audit Cycles</button>
                     <button className={`tab-btn ${tab === "discrepancies" ? "active" : ""}`} onClick={() => setTab("discrepancies")}>Discrepancy Report</button>
                 </div>
+
+                {showForm && (
+                    <div className="form-panel" style={{ background: 'var(--surface)', padding: '24px', borderRadius: '12px', marginBottom: '24px' }}>
+                        <div className="form-field">
+                            <label>Cycle Name</label>
+                            <input type="text" name="name" value={form.name} onChange={handleChange} placeholder="e.g. Q4 Asset Audit" />
+                        </div>
+                        <div className="form-field">
+                            <label>Start Date</label>
+                            <input type="date" name="startDate" value={form.startDate} onChange={handleChange} />
+                        </div>
+                        <div className="form-panel-actions">
+                            <button className="btn-primary" onClick={handleSubmit}>Create Cycle</button>
+                        </div>
+                    </div>
+                )}
 
                 {tab === "cycles" && (
                     <div className="table-wrap">
@@ -53,16 +89,16 @@ function Audit() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {MOCK_CYCLES.map((c) => (
+                                {cycles.map((c) => (
                                     <tr key={c.id}>
                                         <td className="cell-strong">{c.name}</td>
-                                        <td className="cell-muted">{c.scope}</td>
-                                        <td className="cell-muted">{c.range}</td>
-                                        <td>{c.auditors}</td>
+                                        <td className="cell-muted">—</td>
+                                        <td className="cell-muted">{c.startDate}</td>
+                                        <td>—</td>
                                         <td><span className={`status-pill ${STATUS_CLASS[c.status]}`}>{c.status}</span></td>
-                                        <td>{c.discrepancies > 0 ? <span className="status-pill red">{c.discrepancies}</span> : "—"}</td>
+                                        <td>{c.progress}%</td>
                                         <td>
-                                            {c.status !== "Closed" && <button className="btn-text">{c.status === "Draft" ? "Start" : "Close Cycle"}</button>}
+                                            {c.status !== "Completed" && <button className="btn-text">Update</button>}
                                         </td>
                                     </tr>
                                 ))}
@@ -83,12 +119,12 @@ function Audit() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {MOCK_DISCREPANCIES.map((d) => (
+                                {discrepancies.map((d) => (
                                     <tr key={d.id}>
-                                        <td className="cell-muted">{d.cycle}</td>
+                                        <td className="cell-muted">—</td>
                                         <td className="cell-strong">{d.asset}</td>
-                                        <td><span className={`status-pill ${FINDING_CLASS[d.finding]}`}>{d.finding}</span></td>
-                                        <td className="cell-muted">{d.note}</td>
+                                        <td><span className={`status-pill ${FINDING_CLASS[d.status] || "orange"}`}>{d.status}</span></td>
+                                        <td className="cell-muted">{d.actualLocation}</td>
                                     </tr>
                                 ))}
                             </tbody>
