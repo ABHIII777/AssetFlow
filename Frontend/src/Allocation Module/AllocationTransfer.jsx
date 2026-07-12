@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import API from "../api";
 import "../shared/moduleStyles.css";
 import "./AllocationTransfer.css";
 
@@ -19,13 +20,13 @@ function AllocationTransfer() {
     const userName = localStorage.getItem("userName") || "";
 
     const fetchAllocations = () => {
-        axios.get(`http://localhost:5000/api/allocations?user=${encodeURIComponent(userName)}&role=${encodeURIComponent(userRole)}`)
+        axios.get(`${API}/allocations?user=${encodeURIComponent(userName)}&role=${encodeURIComponent(userRole)}`)
             .then(res => setAllocations(res.data))
             .catch(err => console.error(err));
     };
 
     const fetchTransfers = () => {
-        axios.get(`http://localhost:5000/api/transfers?user=${encodeURIComponent(userName)}&role=${encodeURIComponent(userRole)}`)
+        axios.get(`${API}/transfers?user=${encodeURIComponent(userName)}&role=${encodeURIComponent(userRole)}`)
             .then(res => setTransfers(res.data))
             .catch(err => console.error(err));
     };
@@ -37,7 +38,7 @@ function AllocationTransfer() {
 
     const handleMarkReturned = async (id) => {
         try {
-            await axios.put(`http://localhost:5000/api/allocations/${id}`, { status: "Returned" });
+            await axios.put(`${API}/allocations/${id}`, { status: "Returned" });
             fetchAllocations();
         } catch (e) { console.error(e); }
     };
@@ -54,7 +55,7 @@ function AllocationTransfer() {
             return;
         }
         try {
-            await axios.post("http://localhost:5000/api/transfers", {
+            await axios.post("${API}/transfers", {
                 asset: transferForm.asset.asset,
                 from: transferForm.asset.assignedTo,
                 to: transferForm.to,
@@ -77,7 +78,7 @@ function AllocationTransfer() {
 
     const handleResolveTransfer = async (id, status) => {
         try {
-            await axios.put(`http://localhost:5000/api/transfers/${id}`, { status });
+            await axios.put(`${API}/transfers/${id}`, { status });
             fetchTransfers();
         } catch (e) { console.error(e); }
     };
@@ -87,7 +88,7 @@ function AllocationTransfer() {
     const handleSubmit = async () => {
         setErrorMsg("");
         try {
-            await axios.post("http://localhost:5000/api/allocations", {
+            await axios.post("${API}/allocations", {
                 asset: form.asset,
                 assignedTo: form.assignedTo,
                 notes: form.notes,

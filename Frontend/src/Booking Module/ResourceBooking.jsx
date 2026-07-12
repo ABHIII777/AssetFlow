@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import API from "../api";
 import "../shared/moduleStyles.css";
 import "./ResourceBooking.css";
 
@@ -15,7 +16,7 @@ function ResourceBooking() {
     const fetchBookings = () => {
         const user = localStorage.getItem("userName");
         const role = localStorage.getItem("userRole");
-        axios.get(`http://localhost:5000/api/bookings?user=${user}&role=${role}`)
+        axios.get(`${API}/bookings?user=${user}&role=${role}`)
             .then(res => setBookings(res.data))
             .catch(err => console.error(err));
     };
@@ -37,9 +38,9 @@ function ResourceBooking() {
 
         try {
             if (editingId) {
-                await axios.put(`http://localhost:5000/api/bookings/${editingId}`, payload);
+                await axios.put(`${API}/bookings/${editingId}`, payload);
             } else {
-                await axios.post("http://localhost:5000/api/bookings", payload);
+                await axios.post("${API}/bookings", payload);
             }
             setShowForm(false);
             setEditingId(null);
@@ -53,7 +54,7 @@ function ResourceBooking() {
 
     const handleCancel = async (id) => {
         try {
-            await axios.delete(`http://localhost:5000/api/bookings/${id}`);
+            await axios.delete(`${API}/bookings/${id}`);
             fetchBookings();
         } catch (err) {
             console.error(err);

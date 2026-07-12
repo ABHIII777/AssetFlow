@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import API from "../api";
 import "./Home.css";
 
 // TODO: replace mock data with real API calls (GET /assets/summary, /bookings, /maintenance, /allocations)
@@ -23,7 +24,7 @@ function Home() {
 
     useEffect(() => {
         // Fetch activity logs
-        axios.get("http://localhost:5000/api/logs")
+        axios.get(`${API}/logs`)
             .then(res => setActivity(res.data))
             .catch(err => console.error(err));
 

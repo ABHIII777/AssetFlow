@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import API from "../api";
 import "../shared/moduleStyles.css";
 import "./Notifications.css";
 
@@ -14,7 +15,7 @@ function Notifications() {
     useEffect(() => {
         const user = localStorage.getItem("userName");
         const role = localStorage.getItem("userRole");
-        axios.get(`http://localhost:5000/api/notifications?user=${user}&role=${role}`)
+        axios.get(`${API}/notifications?user=${user}&role=${role}`)
             .then(res => {
                 const mapped = res.data.map(n => ({
                     id: n.id,
@@ -28,7 +29,7 @@ function Notifications() {
             })
             .catch(err => console.error(err));
 
-        axios.get("http://localhost:5000/api/logs")
+        axios.get("${API}/logs")
             .then(res => setLogs(res.data))
             .catch(err => console.error(err));
     }, []);

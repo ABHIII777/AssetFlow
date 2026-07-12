@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import API from "../api";
 import "../shared/moduleStyles.css";
 import "./OrganizationSetup.css";
 
@@ -23,7 +24,7 @@ function DepartmentsTab() {
     const [form, setForm] = useState({ name: "", head: "", parent: "", status: "Active" });
 
     const fetchDepartments = () => {
-        axios.get("http://localhost:5000/api/departments")
+        axios.get(`${API}/departments`)
             .then(res => setDepartments(res.data))
             .catch(err => console.error(err));
     };
@@ -39,7 +40,7 @@ function DepartmentsTab() {
 
     const handleSubmit = async () => {
         try {
-            await axios.post("http://localhost:5000/api/departments", form);
+            await axios.post(`${API}/departments`, form);
             setShowForm(false);
             setForm({ name: "", head: "", parent: "", status: "Active" });
             fetchDepartments();
@@ -52,7 +53,7 @@ function DepartmentsTab() {
         const newName = prompt("Enter new department name:", currentName);
         if (newName && newName !== currentName) {
             try {
-                await axios.put(`http://localhost:5000/api/departments/${id}`, { name: newName });
+                await axios.put(`${API}/departments/${id}`, { name: newName });
                 fetchDepartments();
             } catch (err) {
                 console.error(err);
@@ -114,7 +115,7 @@ function CategoriesTab() {
     const [categories, setCategories] = useState([]);
 
     const fetchCategories = () => {
-        axios.get("http://localhost:5000/api/categories")
+        axios.get(`${API}/categories`)
             .then(res => setCategories(res.data))
             .catch(err => console.error(err));
     };
@@ -127,7 +128,7 @@ function CategoriesTab() {
         const newName = prompt("Enter new category name:", currentName);
         if (newName && newName !== currentName) {
             try {
-                await axios.put(`http://localhost:5000/api/categories/${id}`, { name: newName });
+                await axios.put(`${API}/categories/${id}`, { name: newName });
                 fetchCategories();
             } catch (err) {
                 console.error(err);
@@ -165,7 +166,7 @@ function EmployeesTab() {
     const [employees, setEmployees] = useState([]);
 
     const fetchEmployees = () => {
-        axios.get("http://localhost:5000/api/employees")
+        axios.get(`${API}/employees`)
             .then(res => setEmployees(res.data))
             .catch(err => console.error(err));
     };
@@ -178,7 +179,7 @@ function EmployeesTab() {
         const newRole = prompt("Enter new role (e.g. Admin, Department Head, Employee):", currentRole);
         if (newRole && newRole !== currentRole) {
             try {
-                await axios.put(`http://localhost:5000/api/employees/${id}`, { role: newRole });
+                await axios.put(`${API}/employees/${id}`, { role: newRole });
                 fetchEmployees();
             } catch (err) {
                 console.error(err);

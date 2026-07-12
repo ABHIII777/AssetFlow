@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import axios from "axios";
+import API from "../api";
 import "../shared/moduleStyles.css";
 
 const STATUS_CLASS = {
@@ -23,17 +24,17 @@ function AssetRegistry() {
     const [dbDepartments, setDbDepartments] = useState([]);
 
     const fetchAssets = () => {
-        axios.get("http://localhost:5000/api/assets")
+        axios.get(`${API}/assets`)
             .then(res => setAssets(res.data))
             .catch(err => console.error(err));
     };
 
     useEffect(() => {
         fetchAssets();
-        axios.get("http://localhost:5000/api/categories")
+        axios.get(`${API}/categories`)
             .then(res => setDbCategories(res.data))
             .catch(err => console.error(err));
-        axios.get("http://localhost:5000/api/departments")
+        axios.get(`${API}/departments`)
             .then(res => setDbDepartments(res.data))
             .catch(err => console.error(err));
     }, []);
@@ -53,7 +54,7 @@ function AssetRegistry() {
     const handleSaveAsset = async () => {
         if (!form.name || !form.category || !form.tag) return alert("Please fill Name, Category, and Tag.");
         try {
-            await axios.post("http://localhost:5000/api/assets", {
+            await axios.post(`${API}/assets`, {
                 ...form,
                 shared: form.shared === "Yes",
                 status: "Available"

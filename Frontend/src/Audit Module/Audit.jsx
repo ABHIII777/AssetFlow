@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import API from "../api";
 import "../shared/moduleStyles.css";
 
 const STATUS_CLASS = { Draft: "grey", Scheduled: "grey", Active: "purple", "In Progress": "purple", Completed: "green", Closed: "green" };
@@ -14,8 +15,8 @@ function Audit() {
     const userRole = localStorage.getItem("userRole") || "Employee";
 
     const fetchCycles = () => {
-        axios.get("http://localhost:5000/api/audits").then(res => setCycles(res.data)).catch(console.error);
-        axios.get("http://localhost:5000/api/discrepancies").then(res => setDiscrepancies(res.data)).catch(console.error);
+        axios.get(`${API}/audits`).then(res => setCycles(res.data)).catch(console.error);
+        axios.get(`${API}/discrepancies`).then(res => setDiscrepancies(res.data)).catch(console.error);
     };
 
     useEffect(() => {
@@ -26,7 +27,7 @@ function Audit() {
         const newStatus = prompt("Enter new status (Scheduled, In Progress, Completed):", currentStatus);
         if (newStatus && ["Scheduled", "In Progress", "Completed"].includes(newStatus)) {
             try {
-                await axios.put(`http://localhost:5000/api/audits/${id}`, { status: newStatus });
+                await axios.put(`${API}/audits/${id}`, { status: newStatus });
                 fetchCycles();
             } catch (err) {
                 console.error(err);
@@ -40,7 +41,7 @@ function Audit() {
 
     const handleSubmit = async () => {
         try {
-            await axios.post("http://localhost:5000/api/audits", {
+            await axios.post(`${API}/audits`, {
                 name: form.name,
                 startDate: form.startDate,
                 status: "Scheduled",

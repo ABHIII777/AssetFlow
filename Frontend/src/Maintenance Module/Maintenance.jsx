@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import API from "../api";
 import "../shared/moduleStyles.css";
 import "./Maintenance.css";
 
@@ -16,13 +17,13 @@ function Maintenance() {
     const userName = localStorage.getItem("userName") || "Admin User";
 
     const fetchRequests = () => {
-        axios.get(`http://localhost:5000/api/maintenance?user=${encodeURIComponent(userName)}&role=${encodeURIComponent(userRole)}`)
+        axios.get(`${API}/maintenance?user=${encodeURIComponent(userName)}&role=${encodeURIComponent(userRole)}`)
             .then(res => setRequests(res.data))
             .catch(err => console.error(err));
     };
 
     const fetchMyAssets = () => {
-        axios.get(`http://localhost:5000/api/allocations?user=${encodeURIComponent(userName)}&role=${encodeURIComponent(userRole)}`)
+        axios.get(`${API}/allocations?user=${encodeURIComponent(userName)}&role=${encodeURIComponent(userRole)}`)
             .then(res => {
                 // filter active allocations if possible, or just map asset name
                 const assets = Array.from(new Set(res.data.map(a => a.asset)));
@@ -38,7 +39,7 @@ function Maintenance() {
 
     const handleResolve = async (id) => {
         try {
-            await axios.put(`http://localhost:5000/api/maintenance/${id}`, { status: "Resolved" });
+            await axios.put(`${API}/maintenance/${id}`, { status: "Resolved" });
             fetchRequests();
         } catch (e) { console.error(e); }
     };
@@ -47,7 +48,7 @@ function Maintenance() {
 
     const handleSubmit = async () => {
         try {
-            await axios.post("http://localhost:5000/api/maintenance", {
+            await axios.post("${API}/maintenance", {
                 ...form,
                 loggedBy: localStorage.getItem("userName") || "Admin User",
                 date: new Date().toISOString().split("T")[0],
